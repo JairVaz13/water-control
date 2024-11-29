@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { View, Text, TextInput, Button, StyleSheet, Alert } from 'react-native';
 import { Picker } from '@react-native-picker/picker';
 
-const CrearContenedor = () => {
+const CrearContenedor = ({ navigation }) => {
   const [tipo, setTipo] = useState('');
   const [capacidad, setCapacidad] = useState(10);
   const [ubicacion, setUbicacion] = useState('');
@@ -46,7 +46,15 @@ const CrearContenedor = () => {
         setCapacidad(10);
         setUbicacion('');
         setLoading(false);
-        Alert.alert('Éxito', 'Contenedor creado con éxito');
+        Alert.alert('Éxito', 'Contenedor creado con éxito', [
+          {
+            text: 'OK',
+            onPress: () => {
+              // Navigate to Home screen after creation
+              navigation.navigate('Contenedores');
+            },
+          },
+        ]);
       })
       .catch((error) => {
         console.error('Error adding container:', error);

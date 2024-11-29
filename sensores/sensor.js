@@ -91,7 +91,7 @@ const Stack = createStackNavigator();
 const Sensores = () => {
   return (
     <Stack.Navigator initialRouteName="Sensores">
-      <Stack.Screen name="Sensores" component={SensoresScreen} options={{ headerShown: false }}/>
+      <Stack.Screen name="Sensores" component={SensoresScreen}/>
       <Stack.Screen name="Crear" component={CrearSensor} />
       <Stack.Screen name="Editar" component={EditarSensor} />
       <Stack.Screen name="Ver" component={VerSensor} />

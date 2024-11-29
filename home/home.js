@@ -5,6 +5,7 @@ import { MaterialIcons } from "@expo/vector-icons";
 import { LineChart } from "react-native-chart-kit";
 import AlbercasScreen from "../albercas/contenedores"
 import Sensores from "../sensores/sensor"
+import Dispensadores from "../dispensadores/dispensadores"
 const Stack = createStackNavigator();
 
 const HomeScreen = ({ navigation }) => {
@@ -59,9 +60,17 @@ const HomeScreen = ({ navigation }) => {
           <MaterialIcons name="water" size={24} color="white" />
           <Text style={styles.buttonText}>Sensores</Text>
         </TouchableOpacity>
+
         <TouchableOpacity
           style={styles.button}
-          onPress={() => navigation.navigate("Reports")}
+          onPress={() => navigation.navigate("Dispensadores")}
+        >
+          <MaterialIcons name="bar-chart" size={24} color="white" />
+          <Text style={styles.buttonText}>Dispensadores</Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={styles.button}
+          onPress={() => navigation.navigate("Historial")}
         >
           <MaterialIcons name="bar-chart" size={24} color="white" />
           <Text style={styles.buttonText}>Historial</Text>
@@ -84,9 +93,10 @@ const AppNavigator = () => {
   return (
     <Stack.Navigator initialRouteName="Home">
       <Stack.Screen name="Home" component={HomeScreen} />
-      <Stack.Screen name="Albercas" component={AlbercasScreen} />
-      <Stack.Screen name="Sensores" component={Sensores}/>
-      <Stack.Screen name="Reports" component={ReportsScreen} />
+      <Stack.Screen name="Albercas" component={AlbercasScreen}options={{ headerShown: false }} />
+      <Stack.Screen name="Sensores" component={Sensores}options={{ headerShown: false }}/>
+      <Stack.Screen name="Dispensadores" component={Dispensadores}options={{ headerShown: false }}/>
+      <Stack.Screen name="Historial" component={ReportsScreen} />
     </Stack.Navigator>
   );
 };

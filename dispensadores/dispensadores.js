@@ -1,19 +1,18 @@
 import React, { useEffect, useState } from "react";
 import { View, Text, Button, Alert, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
 import { createStackNavigator } from '@react-navigation/stack';
-import CrearContenedor from './crearContenedor';
-import EditarContenedor from './editarContenedor'; 
-import VerContenedor from './verContenedor';
+import CrearDispensador from './crearDispensador';
+import EditarDispensador from './editarDispensador'; 
+import VerDispensador from './verDispensador';
 import { LinearGradient } from 'expo-linear-gradient';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 
-// Componente para un elemento de alberca
-const AlbercaItem = ({ id, ubicacion, tipo, capacidad, navigation, onDelete }) => {
+const DispensadorItem = ({ id, ubicacion, tipo, capacidad, navigation, onDelete }) => {
 
   const handleDelete = (id) => {
     Alert.alert(
       "Confirmación",
-      "¿Estás seguro de que deseas eliminar este contenedor?",
+      "¿Estás seguro de que deseas eliminar este Dispensador?",
       [
         {
           text: "Cancelar",
@@ -49,7 +48,7 @@ const AlbercaItem = ({ id, ubicacion, tipo, capacidad, navigation, onDelete }) =
   );
 };
 
-const ContenedoresScreen = ({ navigation }) => {
+const DispensadoresScreen = ({ navigation }) => {
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -83,14 +82,14 @@ const ContenedoresScreen = ({ navigation }) => {
   return (
     <LinearGradient colors={['#0f8c8c', '#025959', '#012840']} style={styles.gradient}>
       <View style={styles.screenContainer}>
-        <Text style={styles.header}>Contenedores</Text>
+        <Text style={styles.header}>Dispensadores</Text>
         {loading ? (
           <Text style={styles.loadingText}>Cargando...</Text>
         ) : (
           <ScrollView>
             {data.length > 0 ? (
               data.map((item) => (
-                <AlbercaItem
+                <DispensadorItem
                   key={item.id_recipiente}
                   id={item.id_recipiente}
                   ubicacion={item.ubicacion}
@@ -101,7 +100,7 @@ const ContenedoresScreen = ({ navigation }) => {
                 />
               ))
             ) : (
-              <Text style={styles.noDataText}>No hay contenedores registrados.</Text>
+              <Text style={styles.noDataText}>No hay Dispensadores registrados.</Text>
             )}
           </ScrollView>
         )}
@@ -116,13 +115,13 @@ const ContenedoresScreen = ({ navigation }) => {
 // Configuración de la navegación
 const Stack = createStackNavigator();
 
-const AlbercasScreen = () => {
+const Dispensadores = () => {
   return (
-    <Stack.Navigator initialRouteName="Contenedores">
-      <Stack.Screen name="Contenedores" component={ContenedoresScreen} />
-      <Stack.Screen name="Crear" component={CrearContenedor} />
-      <Stack.Screen name="Editar" component={EditarContenedor} />
-      <Stack.Screen name="Ver" component={VerContenedor} />
+    <Stack.Navigator initialRouteName="Dispensadores">
+      <Stack.Screen name="Dispensadores" component={DispensadoresScreen} options={{ headerShown: false }}/>
+      <Stack.Screen name="Crear" component={CrearDispensador} />
+      <Stack.Screen name="Editar" component={EditarDispensador} />
+      <Stack.Screen name="Ver" component={VerDispensador} />
     </Stack.Navigator>
   );
 };
@@ -199,4 +198,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default AlbercasScreen;
+export default Dispensadores;
