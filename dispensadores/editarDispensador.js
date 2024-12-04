@@ -12,7 +12,7 @@ const EditarContenedor = ({ route, navigation }) => {
 
   useEffect(() => {
     // Fetch the existing data for the selected container
-    fetch(`https://water-efficient-control.onrender.com/containers/${id}/9f17ab0b-d0be-40d5-b9ca-0844645e38d6`)
+    fetch(`https://water-efficient-control.onrender.com/dispensadores/${id}/9f17ab0b-d0be-40d5-b9ca-0844645e38d6`)
       .then((response) => response.json())
       .then((data) => {
         setTipo(data.tipo);

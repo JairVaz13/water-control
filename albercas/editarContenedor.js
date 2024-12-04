@@ -48,7 +48,15 @@ const EditarContenedor = ({ route, navigation }) => {
       .then((data) => {
         console.log('Container updated:', data);
         setLoading(false);
-        navigation.goBack(); // Go back to the previous screen after saving
+        Alert.alert('Éxito', 'Contenedor actualizado con éxito', [
+          {
+            text: 'OK',
+            onPress: () => {
+              // Navigate to Home screen after creation
+              navigation.navigate('Contenedores');
+            },
+          },
+        ]); // Go back to the previous screen after saving
       })
       .catch((error) => {
         console.error('Error updating container:', error);

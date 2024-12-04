@@ -32,7 +32,6 @@ const DispensadorItem = ({ id, ubicacion, tipo, capacidad, navigation, onDelete 
       <Text style={styles.itemTitle}>Nombre: {tipo + id || "No disponible"}</Text>
       <Text style={styles.itemText}>Ubicación: {ubicacion || "No disponible"}</Text>
       <Text style={styles.itemText}>Tipo: {tipo || "No especificado"}</Text>
-      <Text style={styles.itemText}>Capacidad: {capacidad || "No especificada"}</Text>
       <View style={styles.buttonContainer}>
         <TouchableOpacity style={styles.button} onPress={() => navigation.navigate("Ver", { id })}>
           <Icon name="visibility" size={24} color="#fff" />
@@ -53,7 +52,7 @@ const DispensadoresScreen = ({ navigation }) => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch("https://water-efficient-control.onrender.com/containers/9f17ab0b-d0be-40d5-b9ca-0844645e38d6")
+    fetch("https://water-efficient-control.onrender.com/dispensadores/9f17ab0b-d0be-40d5-b9ca-0844645e38d6")
       .then((response) => response.json())
       .then((result) => {
         setData(result);
@@ -66,7 +65,7 @@ const DispensadoresScreen = ({ navigation }) => {
   }, []);
 
   const handleDelete = (id) => {
-    fetch(`https://water-efficient-control.onrender.com/containers/${id}/9f17ab0b-d0be-40d5-b9ca-0844645e38d6`, {
+    fetch(`https://water-efficient-control.onrender.com/dispensadores/${id}/9f17ab0b-d0be-40d5-b9ca-0844645e38d6`, {
       method: 'DELETE',
     })
       .then((response) => response.json())

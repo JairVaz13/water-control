@@ -1,18 +1,17 @@
 import React, { useEffect, useState } from "react";
-import { View, Text, Button, Alert, StyleSheet, TouchableOpacity } from 'react-native';
-import { createStackNavigator } from '@react-navigation/stack';
-import CrearSensor from './crearsensor';
-import EditarSensor from './editarsensor'; 
-import VerSensor from './versensor';
-import { LinearGradient } from 'expo-linear-gradient';
+import { View, Text, Alert, StyleSheet, TouchableOpacity } from "react-native";
+import { createStackNavigator } from "@react-navigation/stack";
+import CrearSensor from "./crearsensor";
+import EditarSensor from "./editarsensor";
+import VerSensor from "./versensor";
+import { LinearGradient } from "expo-linear-gradient";
 
-const SensorItem = ({ id, ubicacion, tipo, capacidad, navigation, onDelete }) => {
+const SensorItem = ({ id, ubicacion, tipo, navigation, onDelete }) => {
   return (
     <View style={styles.itemContainer}>
       <Text style={styles.itemTitle}>ID Sensor: {id || "No disponible"}</Text>
       <Text style={styles.itemText}>Ubicación: {ubicacion || "No disponible"}</Text>
       <Text style={styles.itemText}>Tipo: {tipo || "No especificado"}</Text>
-      <Text style={styles.itemText}>Capacidad: {capacidad || "No especificada"}</Text>
       <View style={styles.buttonContainer}>
         <TouchableOpacity style={styles.buttonGreen} onPress={() => navigation.navigate("Ver", { id })}>
           <Text style={styles.buttonText}>Ver</Text>
@@ -20,6 +19,7 @@ const SensorItem = ({ id, ubicacion, tipo, capacidad, navigation, onDelete }) =>
         <TouchableOpacity style={styles.buttonBlue} onPress={() => navigation.navigate("Editar", { id })}>
           <Text style={styles.buttonText}>Actualizar</Text>
         </TouchableOpacity>
+        
       </View>
     </View>
   );
@@ -28,39 +28,91 @@ const SensorItem = ({ id, ubicacion, tipo, capacidad, navigation, onDelete }) =>
 const SensoresScreen = ({ navigation }) => {
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
-    fetch("https://water-efficient-control.onrender.com/sensors/9f17ab0b-d0be-40d5-b9ca-0844645e38d6")
-      .then((response) => response.json())
-      .then((result) => {
-        setData(result);
+    const fetchSensorsWithDetails = async () => {
+      setLoading(true);
+      setError(null);
+      try {
+        const response = await fetch(
+          "https://water-efficient-control.onrender.com/sensors/9f17ab0b-d0be-40d5-b9ca-0844645e38d6"
+        );
+        const sensors = await response.json();
+
+        const sensorsWithDetails = await Promise.all(
+          sensors.map(async (sensor) => {
+            if (sensor.id_recipiente) {
+              try {
+                const containerResponse = await fetch(
+                  `https://water-efficient-control.onrender.com/containers/${sensor.id_recipiente}/9f17ab0b-d0be-40d5-b9ca-0844645e38d6`
+                );
+                const containerData = await containerResponse.json();
+                return {
+                  ...sensor,
+                  ubicacion: `${containerData.tipo || "No disponible"}-${sensor.id_recipiente} ${containerData.ubicacion || "No disponible"}`,
+                };
+              } catch (error) {
+                console.error(`Error fetching container for ${sensor.id_recipiente}:`, error);
+                return {
+                  ...sensor,
+                  ubicacion: `${sensor.id_recipiente} - No disponible (${sensor.tipo})`,
+                };
+              }
+            } else {
+              return {
+                ...sensor,
+                ubicacion: `No asignado (${sensor.tipo})`,
+              };
+            }
+          })
+        );
+
+        setData(sensorsWithDetails);
+      } catch (err) {
+        console.error("Error fetching sensors or containers:", err);
+        setError("Error cargando datos. Intenta nuevamente más tarde.");
+      } finally {
         setLoading(false);
-      })
-      .catch((error) => {
-        console.error("Error fetching data:", error);
-        setLoading(false);
-      });
+      }
+    };
+
+    fetchSensorsWithDetails();
   }, []);
 
   const handleDelete = (id) => {
-    fetch(`https://water-efficient-control.onrender.com/sensors/${id}/9f17ab0b-d0be-40d5-b9ca-0844645e38d6`, {
-      method: 'DELETE',
-    })
-      .then((response) => response.json())
-      .then(() => {
-        console.log('Sensor eliminado');
-        setData((prevData) => prevData.filter(item => item.id_sensor !== id));
-      })
-      .catch((error) => {
-        console.error('Error eliminando el sensor:', error);
-      });
+    Alert.alert(
+      "Confirmar eliminación",
+      "¿Estás seguro de que deseas eliminar este sensor?",
+      [
+        { text: "Cancelar", style: "cancel" },
+        {
+          text: "Eliminar",
+          onPress: () => {
+            fetch(`https://water-efficient-control.onrender.com/sensors/${id}/9f17ab0b-d0be-40d5-b9ca-0844645e38d6`, {
+              method: "DELETE",
+            })
+              .then((response) => response.json())
+              .then(() => {
+                console.log("Sensor eliminado");
+                setData((prevData) => prevData.filter((item) => item.id_sensor !== id));
+              })
+              .catch((error) => {
+                console.error("Error eliminando el sensor:", error);
+              });
+          },
+        },
+      ]
+    );
   };
 
   return (
-    <LinearGradient colors={['#0f8c8c', '#025959', '#012840']} style={styles.gradient}>
+    <LinearGradient colors={["#0f8c8c", "#025959", "#012840"]} style={styles.gradient}>
       <View style={styles.screenContainer}>
         <Text style={styles.header}>Sensores</Text>
-        {loading ? (
+        {error ? (
+          <Text style={styles.errorText}>{error}</Text>
+        ) : loading ? (
           <Text style={styles.loadingText}>Cargando...</Text>
         ) : data.length > 0 ? (
           data.map((item) => (
@@ -69,7 +121,6 @@ const SensoresScreen = ({ navigation }) => {
               id={item.id_sensor}
               ubicacion={item.ubicacion}
               tipo={item.tipo}
-              capacidad={item.capacidad}
               navigation={navigation}
               onDelete={handleDelete}
             />
@@ -84,7 +135,6 @@ const SensoresScreen = ({ navigation }) => {
     </LinearGradient>
   );
 };
-
 // Configuración de la navegación
 const Stack = createStackNavigator();
 

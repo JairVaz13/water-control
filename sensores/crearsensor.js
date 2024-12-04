@@ -1,32 +1,52 @@
-import React, { useState } from 'react';
-import { View, Text, TextInput, Button, StyleSheet, Alert } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { View, Text, Button, StyleSheet, Alert } from 'react-native';
 import { Picker } from '@react-native-picker/picker';
 
 const CrearSensor = () => {
   const [tipo, setTipo] = useState('');
-  const [precision, setPrecision] = useState('');
-  const [ubicacion, setUbicacion] = useState('');
+  const [contenedores, setContenedores] = useState([]);
+  const [contenedorSeleccionado, setContenedorSeleccionado] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
-  const token = '9f17ab0b-d0be-40d5-b9ca-0844645e38d6'; // Example token
+  const token = '9f17ab0b-d0be-40d5-b9ca-0844645e38d6'; 
+
+  
+  useEffect(() => {
+    const fetchContenedores = async () => {
+      try {
+        const response = await fetch(
+          'https://water-efficient-control.onrender.com/containers/9f17ab0b-d0be-40d5-b9ca-0844645e38d6',
+        );
+        if (!response.ok) {
+          throw new Error('Error al obtener la lista de contenedores.');
+        }
+        const data = await response.json();
+        setContenedores(data || []); // Asume que la API devuelve un array de contenedores
+      } catch (error) {
+        console.error('Error al obtener los contenedores:', error);
+        setError('No se pudieron cargar los contenedores.');
+      }
+    };
+
+    fetchContenedores();
+  }, []);
 
   const handleSubmit = () => {
-    if (!tipo || !ubicacion || !precision) {
+    if (!tipo || !contenedorSeleccionado) {
       setError('Por favor completa todos los campos requeridos.');
       return;
     }
-
+  
     setLoading(true);
     setError('');
-
+  
     const newSensor = {
       tipo,
-      precision,
-      ubicacion,
-      token, // Include the token in the body
+      token,
+      id_recipiente: parseInt(contenedorSeleccionado, 10), // Cambiar al nombre esperado por el backend
     };
-
+  
     fetch('https://water-efficient-control.onrender.com/sensors/crear/', {
       method: 'POST',
       headers: {
@@ -36,24 +56,35 @@ const CrearSensor = () => {
     })
       .then((response) => {
         if (!response.ok) {
-          throw new Error('Error en la solicitud al servidor.');
+          return response.text().then((text) => {
+            console.error('Respuesta del servidor:', text); // Debug detallado
+            throw new Error('Error en la solicitud al servidor.');
+          });
         }
         return response.json();
       })
       .then((data) => {
         console.log('Nuevo sensor agregado:', data);
         setTipo('');
-        setPrecision('');
-        setUbicacion('');
+        setContenedorSeleccionado('');
         setLoading(false);
-        Alert.alert('Éxito', 'Sensor creado con éxito');
+                Alert.alert('Éxito', 'Sensor creado con éxito', [
+          {
+            text: 'OK',
+            onPress: () => {
+              // Navigate to Home screen after creation
+              navigation.navigate('Sensores');
+            },
+          },
+        ]);
       })
       .catch((error) => {
-        console.error('Error agregando sensor:', error);
+        console.error('Error al agregar el sensor:', error);
         setError(error.message || 'Hubo un error al enviar el formulario.');
         setLoading(false);
       });
   };
+  
 
   return (
     <View style={styles.mainContainer}>
@@ -68,31 +99,29 @@ const CrearSensor = () => {
           >
             <Picker.Item label="Selecciona un tipo" value="" />
             <Picker.Item label="Sensor de pH" value="Sensor de pH" />
-            <Picker.Item label="Sensor de Nivel" value="Sensor de Nivel" />
-            <Picker.Item label="Sensor de Temperatura" value="Sensor de Temperatura" />
+            <Picker.Item label="Sensor de TDS" value="Sensor de TDS" />
           </Picker>
         </View>
       </View>
 
       <View style={styles.container}>
-        <Text style={styles.label}>Precisión (%):</Text>
-        <TextInput
-          style={styles.input}
-          value={precision}
-          onChangeText={setPrecision}
-          placeholder="Precisión del sensor"
-          keyboardType="numeric"
-        />
-      </View>
+        <Text style={styles.label}>Contenedor:</Text>
+        <View style={styles.pickerContainer}>
+        <Picker
+  selectedValue={contenedorSeleccionado}
+  onValueChange={(itemValue) => setContenedorSeleccionado(itemValue)}
+>
+  <Picker.Item label="Selecciona un contenedor" value="" />
+  {contenedores.map((contenedor) => (
+            <Picker.Item
+              key={contenedor.id_recipiente} 
+              label={`${contenedor.tipo} - ${id_recipiente}`} // Etiqueta combinada
+              value={contenedor.id_recipiente} // Valor seleccionado
+            />
+          ))}
+        </Picker>
 
-      <View style={styles.container}>
-        <Text style={styles.label}>Ubicación:</Text>
-        <TextInput
-          style={styles.input}
-          value={ubicacion}
-          onChangeText={setUbicacion}
-          placeholder="Ubicación del sensor"
-        />
+        </View>
       </View>
 
       {error && <Text style={styles.error}>{error}</Text>}
@@ -120,19 +149,10 @@ const styles = StyleSheet.create({
     marginBottom: 20,
     textAlign: 'center',
   },
-  input: {
-    borderWidth: 1,
-    borderColor: '#D1D5DB',
-    borderRadius: 8,
-    padding: 10,
-    fontSize: 16,
-    backgroundColor: '#FFFFFF',
-  },
   pickerContainer: {
     borderWidth: 1,
     borderColor: '#D1D5DB',
     borderRadius: 8,
-    paddingHorizontal: 5,
     backgroundColor: '#FFFFFF',
   },
   label: {

@@ -1,25 +1,54 @@
-import React, { useState, useEffect } from 'react';
-import { View, Text, Button, StyleSheet } from 'react-native';
+import React, { useState, useEffect } from "react";
+import { View, Text, Button, StyleSheet } from "react-native";
 
-const VerContenedor = ({ route, navigation }) => {
-  const { id } = route.params; // Obtiene el ID del contenedor a visualizar
+const VerSensor = ({ route, navigation }) => {
+  const { id } = route.params; // ID del sensor
   const [container, setContainer] = useState(null);
-  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
 
   useEffect(() => {
-    // Fetch de los datos del contenedor
-    fetch(`https://water-efficient-control.onrender.com/containers/${id}/9f17ab0b-d0be-40d5-b9ca-0844645e38d6`)
-      .then((response) => {
-        if (!response.ok) {
-          throw new Error('Error al obtener los datos del contenedor');
+    const fetchSensorDetails = async () => {
+      setLoading(true);
+      setError("");
+      try {
+        const response = await fetch(
+          `https://water-efficient-control.onrender.com/sensors/${id}/9f17ab0b-d0be-40d5-b9ca-0844645e38d6`
+        );
+        const sensorData = await response.json();
+
+        if (sensorData.id_recipiente) {
+          try {
+            const containerResponse = await fetch(
+              `https://water-efficient-control.onrender.com/containers/${sensorData.id_recipiente}/9f17ab0b-d0be-40d5-b9ca-0844645e38d6`
+            );
+            const containerDetails = await containerResponse.json();
+            setContainer({
+              ...sensorData,
+              ubicacion: `${containerDetails.tipo || "No disponible"} - ${sensorData.id_recipiente} (${containerDetails.ubicacion || "No disponible"})`,
+            });
+          } catch (containerError) {
+            console.error("Error fetching container details:", containerError);
+            setContainer({
+              ...sensorData,
+              ubicacion: `${sensorData.id_recipiente} - No disponible`,
+            });
+          }
+        } else {
+          setContainer({
+            ...sensorData,
+            ubicacion: "No asignado",
+          });
         }
-        return response.json();
-      })
-      .then((data) => setContainer(data))
-      .catch((error) => {
-        console.error('Error fetching container data:', error);
-        setError('Hubo un problema al obtener los datos del contenedor.');
-      });
+      } catch (sensorError) {
+        console.error("Error fetching sensor details:", sensorError);
+        setError("Error cargando datos. Intenta nuevamente más tarde.");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchSensorDetails();
   }, [id]);
 
   if (error) {
@@ -31,21 +60,28 @@ const VerContenedor = ({ route, navigation }) => {
     );
   }
 
+  if (loading) {
+    return (
+      <View style={styles.container}>
+        <Text style={styles.loading}>Cargando datos del sensor...</Text>
+      </View>
+    );
+  }
+
   if (!container) {
     return (
       <View style={styles.container}>
-        <Text style={styles.loading}>Cargando datos del contenedor...</Text>
+        <Text style={styles.error}>No se encontraron detalles del sensor.</Text>
+        <Button title="Regresar" onPress={() => navigation.goBack()} />
       </View>
     );
   }
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Detalles de la Alberca</Text>
+      <Text style={styles.title}>Detalles del Sensor</Text>
       <Text style={styles.detail}>Tipo: {container.tipo}</Text>
-      <Text style={styles.detail}>Capacidad: {container.capacidad} litros</Text>
       <Text style={styles.detail}>Ubicación: {container.ubicacion}</Text>
-
       <Button title="Regresar" onPress={() => navigation.goBack()} />
     </View>
   );
@@ -55,32 +91,32 @@ const VerContenedor = ({ route, navigation }) => {
 const styles = StyleSheet.create({
   container: {
     padding: 20,
-    backgroundColor: '#fff',
+    backgroundColor: "#fff",
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
   },
   title: {
     fontSize: 24,
-    fontWeight: 'bold',
+    fontWeight: "bold",
     marginBottom: 20,
-    color: '#333',
+    color: "#333",
   },
   detail: {
     fontSize: 16,
     marginBottom: 10,
-    color: '#555',
+    color: "#555",
   },
   error: {
     fontSize: 16,
-    color: 'red',
+    color: "red",
     marginBottom: 20,
-    textAlign: 'center',
+    textAlign: "center",
   },
   loading: {
     fontSize: 18,
-    color: '#777',
+    color: "#777",
   },
 });
 
-export default VerContenedor;
+export default VerSensor;
