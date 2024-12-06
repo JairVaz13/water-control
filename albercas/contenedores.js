@@ -1,33 +1,12 @@
 import React, { useEffect, useState } from "react";
-import { View, Text, Button, Alert, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
+import { View, Text, Button, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
 import { createStackNavigator } from '@react-navigation/stack';
-import CrearContenedor from './crearContenedor';
-import EditarContenedor from './editarContenedor'; 
-import VerContenedor from './verContenedor';
 import { LinearGradient } from 'expo-linear-gradient';
-import Icon from 'react-native-vector-icons/MaterialIcons';
+import CrearContenedor from './crearContnedor';
+import EditarContenedor from './editarContenedor';
+import VerContenedor from './verContenedor';
 
-// Componente para un elemento de alberca
-const AlbercaItem = ({ id, ubicacion, tipo, capacidad, navigation, onDelete }) => {
-
-  const handleDelete = (id) => {
-    Alert.alert(
-      "Confirmación",
-      "¿Estás seguro de que deseas eliminar este contenedor?",
-      [
-        {
-          text: "Cancelar",
-          style: "cancel",
-        },
-        {
-          text: "Eliminar",
-          onPress: () => onDelete(id),
-          style: "destructive",
-        },
-      ]
-    );
-  };
-
+const AlbercaItem = ({ id, ubicacion, tipo, capacidad, navigation }) => {
   return (
     <View style={styles.itemContainer}>
       <Text style={styles.itemTitle}>Nombre: {tipo + id || "No disponible"}</Text>
@@ -35,14 +14,17 @@ const AlbercaItem = ({ id, ubicacion, tipo, capacidad, navigation, onDelete }) =
       <Text style={styles.itemText}>Tipo: {tipo || "No especificado"}</Text>
       <Text style={styles.itemText}>Capacidad: {capacidad || "No especificada"}</Text>
       <View style={styles.buttonContainer}>
-        <TouchableOpacity style={styles.button} onPress={() => navigation.navigate("Ver", { id })}>
-          <Icon name="visibility" size={24} color="#fff" />
+        <TouchableOpacity
+          style={[styles.actionButton, { backgroundColor: '#28a745' }]}
+          onPress={() => navigation.navigate("Ver", { id })}
+        >
+          <Text style={styles.buttonText}>Ver</Text>
         </TouchableOpacity>
-        <TouchableOpacity style={styles.button} onPress={() => navigation.navigate("Editar", { id })}>
-          <Icon name="edit" size={24} color="#fff" />
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.button} onPress={() => handleDelete(id)}>
-          <Icon name="delete" size={24} color="#fff" />
+        <TouchableOpacity
+          style={[styles.actionButton, { backgroundColor: '#007bff' }]}
+          onPress={() => navigation.navigate("Editar", { id })}
+        >
+          <Text style={styles.buttonText}>Actualizar</Text>
         </TouchableOpacity>
       </View>
     </View>
@@ -54,7 +36,7 @@ const ContenedoresScreen = ({ navigation }) => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch("https://water-efficient-control.onrender.com/containers/9f17ab0b-d0be-40d5-b9ca-0844645e38d6")
+    fetch("https://water-efficient-control.onrender.com/containers/58a6bfc2-67f0-4a8c-bd09-d5e0d2300af1")
       .then((response) => response.json())
       .then((result) => {
         setData(result);
@@ -66,59 +48,42 @@ const ContenedoresScreen = ({ navigation }) => {
       });
   }, []);
 
-  const handleDelete = (id) => {
-    fetch(`https://water-efficient-control.onrender.com/containers/${id}/9f17ab0b-d0be-40d5-b9ca-0844645e38d6`, {
-      method: 'DELETE',
-    })
-      .then((response) => response.json())
-      .then(() => {
-        console.log('Container deleted');
-        setData((prevData) => prevData.filter(item => item.id_recipiente !== id));
-      })
-      .catch((error) => {
-        console.error('Error deleting container:', error);
-      });
-  };
-
   return (
-    <LinearGradient colors={['#0f8c8c', '#025959', '#012840']} style={styles.gradient}>
-      <View style={styles.screenContainer}>
-        <Text style={styles.header}>Contenedores</Text>
-        {loading ? (
-          <Text style={styles.loadingText}>Cargando...</Text>
-        ) : (
-          <ScrollView>
-            {data.length > 0 ? (
-              data.map((item) => (
-                <AlbercaItem
-                  key={item.id_recipiente}
-                  id={item.id_recipiente}
-                  ubicacion={item.ubicacion}
-                  tipo={item.tipo}
-                  capacidad={item.capacidad}
-                  navigation={navigation}
-                  onDelete={handleDelete}
-                />
-              ))
-            ) : (
-              <Text style={styles.noDataText}>No hay contenedores registrados.</Text>
-            )}
-          </ScrollView>
-        )}
-        <TouchableOpacity style={styles.createButton} onPress={() => navigation.navigate("Crear")}>
-          <Text style={styles.createButtonText}>+ Crear</Text>
-        </TouchableOpacity>
-      </View>
+    <LinearGradient colors={['#0f8c8c', '#025959', '#012840']} style={styles.container}>
+      <Text style={styles.title}>Contenedores</Text>
+      {loading ? (
+        <Text style={styles.loadingText}>Cargando...</Text>
+      ) : data.length > 0 ? (
+        <ScrollView contentContainerStyle={styles.scrollContainer}>
+          {data.map((item) => (
+            <AlbercaItem
+              key={item.id_recipiente}
+              id={item.id_recipiente}
+              ubicacion={item.ubicacion}
+              tipo={item.tipo}
+              capacidad={item.capacidad}
+              navigation={navigation}
+            />
+          ))}
+        </ScrollView>
+      ) : (
+        <Text style={styles.noDataText}>No hay contenedores registrados.</Text>
+      )}
+      <TouchableOpacity
+        style={[styles.actionButton, styles.createButton]}
+        onPress={() => navigation.navigate("Crear")}
+      >
+        <Text style={styles.buttonText}>+ Crear</Text>
+      </TouchableOpacity>
     </LinearGradient>
   );
 };
 
-// Configuración de la navegación
 const Stack = createStackNavigator();
 
-const AlbercasScreen = () => {
+const App = () => {
   return (
-    <Stack.Navigator initialRouteName="Contenedores">
+    <Stack.Navigator initialRouteName="Contenedores" screenOptions={{ headerShown: false }}>
       <Stack.Screen name="Contenedores" component={ContenedoresScreen} />
       <Stack.Screen name="Crear" component={CrearContenedor} />
       <Stack.Screen name="Editar" component={EditarContenedor} />
@@ -128,75 +93,74 @@ const AlbercasScreen = () => {
 };
 
 const styles = StyleSheet.create({
-  gradient: { flex: 1 },
-  screenContainer: {
-    padding: 20,
+  container: {
     flex: 1,
+    padding: 20,
   },
-  header: {
-    fontSize: 24,
+  scrollContainer: {
+    paddingBottom: 20,
+  },
+  title: {
+    fontSize: 28,
     fontWeight: 'bold',
-    marginBottom: 20,
-    color: '#fff',
     textAlign: 'center',
+    color: '#fff', // Texto blanco para el título
+    marginBottom: 20,
+  },
+  loadingText: {
+    textAlign: 'center',
+    fontSize: 16,
+    color: '#ccc', // Texto más claro para indicar que está cargando
+  },
+  noDataText: {
+    textAlign: 'center',
+    fontSize: 16,
+    color: '#999', // Texto de color gris claro si no hay datos
   },
   itemContainer: {
-    padding: 20,
-    marginBottom: 15,
-    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    padding: 15,
+    marginVertical: 10,
+    backgroundColor: 'rgba(255, 255, 255, 0.1)', // Fondo translúcido para los ítems
     borderRadius: 10,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
-    shadowRadius: 5,
-    elevation: 3,
+    shadowRadius: 4,
+    elevation: 2,
   },
   itemTitle: {
-    fontSize: 16,
+    fontSize: 18,
     fontWeight: 'bold',
-    color: '#fff',
+    marginBottom: 5,
+    color: '#fff', // Texto en blanco para el nombre
   },
   itemText: {
     fontSize: 14,
-    color: '#ccc',
-    marginTop: 5,
+    color: '#ccc', // Texto en gris claro para los detalles
+    marginBottom: 5,
   },
   buttonContainer: {
     flexDirection: 'row',
-    marginTop: 10,
     justifyContent: 'space-between',
+    marginTop: 10,
   },
-  button: {
-    backgroundColor: '#4CAF50', // Default green for buttons
+  actionButton: {
     padding: 10,
     borderRadius: 8,
-    flex: 1,
     alignItems: 'center',
-    justifyContent: 'center',
-    margin: 5,
+    width: '48%',
+  },
+  buttonText: {
+    color: '#fff',
+    fontWeight: 'bold',
+    fontSize: 14,
   },
   createButton: {
-    backgroundColor: '#00a8cc',
-    padding: 15,
-    borderRadius: 8,
+    backgroundColor: '#00a8cc', // Fondo morado para el botón de crear
     marginTop: 20,
-  },
-  createButtonText: {
-    color: '#fff',
-    textAlign: 'center',
-    fontSize: 16,
-    fontWeight: 'bold',
-  },
-  loadingText: {
-    fontSize: 18,
-    color: '#ccc',
-    textAlign: 'center',
-  },
-  noDataText: {
-    fontSize: 16,
-    color: '#ccc',
-    textAlign: 'center',
+    alignSelf: 'center',
+    width: '50%',
   },
 });
 
-export default AlbercasScreen;
+export default App;
