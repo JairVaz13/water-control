@@ -3,7 +3,6 @@ import { View, Text, Button, StyleSheet, Alert } from 'react-native';
 import { Picker } from '@react-native-picker/picker';
 
 const CrearDispensador = () => {
-  const [tipo, setTipo] = useState('');
   const [contenedores, setContenedores] = useState([]);
   const [contenedorSeleccionado, setContenedorSeleccionado] = useState('');
   const [loading, setLoading] = useState(false);
@@ -33,7 +32,7 @@ const CrearDispensador = () => {
   }, []);
 
   const handleSubmit = () => {
-    if (!tipo || !contenedorSeleccionado) {
+    if (!contenedorSeleccionado) {
       setError('Por favor completa todos los campos requeridos.');
       return;
     }
@@ -42,9 +41,9 @@ const CrearDispensador = () => {
     setError('');
   
     const newDispensador = {
-      tipo,
-      token,
+      estado:0,
       id_recipienre: parseInt(contenedorSeleccionado, 10), // Cambiar al nombre esperado por el backend
+      token,
     };
   
     fetch('https://water-efficient-control.onrender.com/dispensadores/crear/', {
@@ -65,7 +64,6 @@ const CrearDispensador = () => {
       })
       .then((data) => {
         console.log('Nuevo Dispensador agregado:', data);
-        setTipo('');
         setContenedorSeleccionado('');
         setLoading(false);
         Alert.alert('Éxito', 'Dispensador creado con éxito');
@@ -80,21 +78,7 @@ const CrearDispensador = () => {
 
   return (
     <View style={styles.mainContainer}>
-      <Text style={styles.title}>Crear Dispensador</Text>
-
-      <View style={styles.container}>
-        <Text style={styles.label}>Tipo:</Text>
-        <View style={styles.pickerContainer}>
-          <Picker
-            selectedValue={tipo}
-            onValueChange={(itemValue) => setTipo(itemValue)}
-          >
-            <Picker.Item label="Selecciona un tipo" value="" />
-            <Picker.Item label="Dispensador de pH" value="Dispensador de pH" />
-            <Picker.Item label="Dispensador de TDS" value="Dispensador de TDS" />
-          </Picker>
-        </View>
-      </View>
+      <Text style={styles.title}>Agregar Dispensador a Contenedor</Text>
 
       <View style={styles.container}>
         <Text style={styles.label}>Contenedor:</Text>

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TextInput, Button, StyleSheet } from 'react-native';
+import { View, Text, TextInput, Button, StyleSheet,Alert } from 'react-native';
 import { Picker } from '@react-native-picker/picker';
 
 const EditarContenedor = ({ route, navigation }) => {
