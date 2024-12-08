@@ -7,7 +7,7 @@ import LoginScreen from "./login/LoginScreen"; // Ruta correcta
 import RegisterScreen from "./login/RegisterScreen"; // Ruta correcta
 import HomeScreen from "./home/HomeScreen"; // Ruta correcta
 import AlbercasScreen from "./albercas/contenedores"; // Ajusta la ruta si es necesario
-import SensoresScreen from './sensores/SensoresScreen'; // Importa correctamente el archivo SensoresScreen
+import SensoresScreen from './sensores/sensor'; // Importa correctamente el archivo SensoresScreen
 import ReportsScreen from './reports/ReportsScreen'; // Pantalla de Reportes
 import DispenserScreen from './dispenser/DispenserScreen'; // Pantalla de Dispensador
 import CameraScreen from './camera/CameraScreen'; // Pantalla de la cámara

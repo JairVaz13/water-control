@@ -1,19 +1,18 @@
 import React, { useEffect, useState } from "react";
 import { View, Text, Alert, StyleSheet, TouchableOpacity } from "react-native";
 import { createStackNavigator } from "@react-navigation/stack";
-import CrearDispensador from "./crearDispensador";
-import EditarDispensador from "./editarDispensador";
-import VerDispensador from "./verDispensador";
+import CrearSensor from ".crearsensor";
+import EditarSensor from ".editarsensor";
+import VerSensor from ".versensor";
 import { LinearGradient } from "expo-linear-gradient";
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-// Obtener el token
 const getToken = async () => {
   try {
     const token = await AsyncStorage.getItem('userToken');
     if (token !== null) {
       console.log('Token recuperado:', token);
-      return token;
+      return token; // Aquí devuelves el token
     } else {
       console.log('No se encontró ningún token');
       return null;
@@ -24,14 +23,12 @@ const getToken = async () => {
   }
 };
 
-const DispensadorItem = ({ id, estado, ubicacion, navigation }) => {
+const SensorItem = ({ id, ubicacion, tipo, navigation, onDelete }) => {
   return (
     <View style={styles.itemContainer}>
-      <Text style={styles.itemTitle}>Dispensador: {id || "No disponible"}</Text>
-      <Text style={styles.itemText}>
-  Estado: {estado === 1 ? "Activo" : estado === 0 ? "Inactivo" : "No disponible"}
-</Text>
+      <Text style={styles.itemTitle}>ID Sensor: {id || "No disponible"}</Text>
       <Text style={styles.itemText}>Ubicación: {ubicacion || "No disponible"}</Text>
+      <Text style={styles.itemText}>Tipo: {tipo || "No especificado"}</Text>
       <View style={styles.buttonContainer}>
         <TouchableOpacity style={styles.buttonGreen} onPress={() => navigation.navigate("Ver", { id })}>
           <Text style={styles.buttonText}>Ver</Text>
@@ -39,18 +36,19 @@ const DispensadorItem = ({ id, estado, ubicacion, navigation }) => {
         <TouchableOpacity style={styles.buttonBlue} onPress={() => navigation.navigate("Editar", { id })}>
           <Text style={styles.buttonText}>Actualizar</Text>
         </TouchableOpacity>
+        
       </View>
     </View>
   );
 };
 
-const DispensadoresScreen = ({ navigation }) => {
+const SensoresScreen = ({ navigation }) => {
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    const fetchDispensadorsWithDetails = async () => {
+    const fetchSensorsWithDetails = async () => {
       setLoading(true);
       setError(null);
       try {
@@ -60,86 +58,120 @@ const DispensadoresScreen = ({ navigation }) => {
           setLoading(false);
           return;
         }
-
-        
-        const response = await fetch(`https://water-efficient-control.onrender.com/dispensadores?token=${token}`);
-
-        
-
+  
+        const response = await fetch(
+          `https://water-efficient-control.onrender.com/sensors/${token}`
+        );
+  
         if (!response.ok) {
-          throw new Error("Error al obtener los dispensadores. No tienes dispensadores.");
+          throw new Error("Error al obtener los sensores.");
         }
-
-        const dispensadors = await response.json();
-        if (!Array.isArray(dispensadors)) {
-          throw new Error("La respuesta no contiene un arreglo de dispensadores.");
-        }
-
-        const dispensadorsWithDetails = await Promise.all(
-          dispensadors.map(async (dispensador) => {
-            if (dispensador.id_recipiente) {
+  
+        const sensors = await response.json();
+  
+        const sensorsWithDetails = await Promise.all(
+          sensors.map(async (sensor) => {
+            if (sensor.id_recipiente) {
               try {
                 const containerResponse = await fetch(
-                  `https://water-efficient-control.onrender.com/containers/${dispensador.id_recipiente}/${token}`
+                  `https://water-efficient-control.onrender.com/containers/${sensor.id_recipiente}/${token}`
                 );
-
+  
                 if (!containerResponse.ok) {
-                  throw new Error("Error al obtener el contenedor. No tienes contenedores.");
+                  throw new Error("Error al obtener el contenedor.");
                 }
-
+  
                 const containerData = await containerResponse.json();
+  
                 return {
-                  ...dispensador,
-                  ubicacion: `${containerData.tipo || "No disponible"}-${dispensador.id_recipiente} ${containerData.ubicacion || "No disponible"}`,
+                  ...sensor,
+                  ubicacion: `${containerData.tipo || "No disponible"}-${sensor.id_recipiente} ${containerData.ubicacion || "No disponible"}`,
                 };
               } catch (error) {
-                console.error(`Error fetching container for ${dispensador.id_recipiente}:`, error);
+                console.error(`Error fetching container for ${sensor.id_recipiente}:`, error);
                 return {
-                  ...dispensador,
-                  ubicacion: `${dispensador.id_recipiente} - No disponible (${dispensador.tipo})`,
+                  ...sensor,
+                  ubicacion: `${sensor.id_recipiente} - No disponible (${sensor.tipo})`,
                 };
               }
             } else {
               return {
-                ...dispensador,
-                ubicacion: `No asignado (${dispensador.tipo})`,
+                ...sensor,
+                ubicacion: `No asignado (${sensor.tipo})`,
               };
             }
           })
         );
-
-        setData(dispensadorsWithDetails);
+  
+        setData(sensorsWithDetails);
       } catch (err) {
-        console.error("Error fetching dispensadors or containers:", err);
-        setError(err.message || "Error cargando datos. Intenta nuevamente más tarde.");
+        console.error("Error fetching sensors or containers:", err);
+        setError("Error cargando datos. Intenta nuevamente más tarde.");
       } finally {
         setLoading(false);
       }
     };
-
-    fetchDispensadorsWithDetails();
+  
+    fetchSensorsWithDetails();
   }, []);
-
+  
+  const handleDelete = async (id) => {
+    const token = await getToken();
+    if (!token) {
+      Alert.alert("Error", "No se encontró un token válido.");
+      return;
+    }
+  
+    Alert.alert(
+      "Confirmar eliminación",
+      "¿Estás seguro de que deseas eliminar este sensor?",
+      [
+        { text: "Cancelar", style: "cancel" },
+        {
+          text: "Eliminar",
+          onPress: async () => {
+            try {
+              const response = await fetch(
+                `https://water-efficient-control.onrender.com/sensors/${id}/${token}`,
+                { method: "DELETE" }
+              );
+  
+              if (!response.ok) {
+                throw new Error("Error eliminando el sensor.");
+              }
+  
+              console.log("Sensor eliminado");
+              setData((prevData) => prevData.filter((item) => item.id_sensor !== id));
+            } catch (error) {
+              console.error("Error eliminando el sensor:", error);
+              Alert.alert("Error", "Hubo un problema al eliminar el sensor.");
+            }
+          },
+        },
+      ]
+    );
+  };
   return (
     <LinearGradient colors={["#0f8c8c", "#025959", "#012840"]} style={styles.gradient}>
       <View style={styles.screenContainer}>
-        <Text style={styles.header}>Dispensadores</Text>
+        <Text style={styles.header}>Sensores</Text>
         {error ? (
           <Text style={styles.errorText}>{error}</Text>
         ) : loading ? (
           <Text style={styles.loadingText}>Cargando...</Text>
         ) : data.length > 0 ? (
           data.map((item) => (
-            <DispensadorItem
-              key={item.id_dispensador}
-              id={item.id_dispensador}
-              estado={item.estado}
+            <SensorItem
+              key={item.id_sensor}
+              id={item.id_sensor}
               ubicacion={item.ubicacion}
+              tipo={item.tipo}
               navigation={navigation}
+              onDelete={handleDelete}
             />
           ))
         ) : (
-          <Text style={styles.noDataText}>No hay dispensadores registrados.</Text>
+          <Text style={styles.noDataText}>No hay sensores registrados.</Text>
         )}
         <TouchableOpacity style={styles.createButton} onPress={() => navigation.navigate("Crear")}>
           <Text style={styles.createButtonText}>+ Crear</Text>
@@ -148,17 +180,16 @@ const DispensadoresScreen = ({ navigation }) => {
     </LinearGradient>
   );
 };
-
 // Configuración de la navegación
 const Stack = createStackNavigator();
 
-const Dispensadores = () => {
+const Sensores = () => {
   return (
-    <Stack.Navigator initialRouteName="Dispensadores">
-      <Stack.Screen name="Dispensadores" component={DispensadoresScreen}/>
-      <Stack.Screen name="Crear" component={CrearDispensador} />
-      <Stack.Screen name="Editar" component={EditarDispensador} />
-      <Stack.Screen name="Ver" component={VerDispensador} />
+    <Stack.Navigator initialRouteName="Sensores">
+      <Stack.Screen name="Sensores" component={SensoresScreen}/>
+      <Stack.Screen name="Crear" component={CrearSensor} />
+      <Stack.Screen name="Editar" component={EditarSensor} />
+      <Stack.Screen name="Ver" component={VerSensor} />
     </Stack.Navigator>
   );
 };
@@ -243,11 +274,6 @@ const styles = StyleSheet.create({
     color: '#ccc',
     textAlign: 'center',
   },
-  errorText: {
-    fontSize: 16,
-    color: 'red',
-    textAlign: 'center',
-  },
 });
 
-export default Dispensadores;
+export default Sensores  ;

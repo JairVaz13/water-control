@@ -1,26 +1,55 @@
 import React, { useState, useEffect } from "react";
 import { View, Text, Button, StyleSheet } from "react-native";
+import AsyncStorage from '@react-native-async-storage/async-storage';
+
+const getToken = async () => {
+  try {
+    const token = await AsyncStorage.getItem('userToken');
+    if (token !== null) {
+      console.log('Token recuperado:', token);
+      return token; // Aquí devuelves el token
+    } else {
+      console.log('No se encontró ningún token');
+      return null;
+    }
+  } catch (error) {
+    console.error('Error al recuperar el token:', error);
+    return null;
+  }
+};
 
 const VerSensor = ({ route, navigation }) => {
   const { id } = route.params; // ID del sensor
   const [container, setContainer] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [token, setToken] = useState(null);
 
   useEffect(() => {
-    const fetchSensorDetails = async () => {
+    // Obtener el token y luego proceder con la carga del sensor
+    const fetchTokenAndSensorDetails = async () => {
+      const token = await getToken();
+      if (!token) {
+        setError("No se encontró un token válido.");
+        setLoading(false);
+        return;
+      }
+      setToken(token);
+      
       setLoading(true);
       setError("");
       try {
+        // Obtener detalles del sensor
         const response = await fetch(
-          `https://water-efficient-control.onrender.com/sensors/${id}/9f17ab0b-d0be-40d5-b9ca-0844645e38d6`
+          `https://water-efficient-control.onrender.com/sensors/${id}/${token}`
         );
         const sensorData = await response.json();
 
         if (sensorData.id_recipiente) {
           try {
+            // Obtener detalles del contenedor
             const containerResponse = await fetch(
-              `https://water-efficient-control.onrender.com/containers/${sensorData.id_recipiente}/9f17ab0b-d0be-40d5-b9ca-0844645e38d6`
+              `https://water-efficient-control.onrender.com/containers/${sensorData.id_recipiente}/${token}`
             );
             const containerDetails = await containerResponse.json();
             setContainer({
@@ -48,7 +77,7 @@ const VerSensor = ({ route, navigation }) => {
       }
     };
 
-    fetchSensorDetails();
+    fetchTokenAndSensorDetails();
   }, [id]);
 
   if (error) {

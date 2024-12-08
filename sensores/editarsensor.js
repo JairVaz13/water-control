@@ -1,6 +1,23 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TextInput, Button, StyleSheet } from 'react-native';
+import { View, Text, Button, StyleSheet } from 'react-native';
 import { Picker } from '@react-native-picker/picker';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+
+const getToken = async () => {
+  try {
+    const token = await AsyncStorage.getItem('userToken');
+    if (token !== null) {
+      console.log('Token recuperado:', token);
+      return token; // Devuelve el token
+    } else {
+      console.log('No se encontró ningún token');
+      return null;
+    }
+  } catch (error) {
+    console.error('Error al recuperar el token:', error);
+    return null;
+  }
+};
 
 const EditarSensor = ({ route, navigation }) => {
   const { id } = route.params; // ID del sensor a editar
@@ -8,32 +25,38 @@ const EditarSensor = ({ route, navigation }) => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [tipo, setTipo] = useState('');
-  const [rango, setRango] = useState('');
-  const [ubicacion, setUbicacion] = useState('');
   const [recipiente, setRecipiente] = useState(''); // Recipiente solo para visualización
+  const [token, setToken] = useState(null); // Almacena el token
 
   useEffect(() => {
-    // Obtener los detalles del sensor y su recipiente
+    // Obtener el token y luego cargar los detalles del sensor
     const fetchData = async () => {
+      const userToken = await getToken();
+      if (!userToken) {
+        setError('No se encontró un token válido.');
+        setLoading(false);
+        return;
+      }
+
+      setToken(userToken); // Establecer el token en el estado
+
       setLoading(true);
       setError('');
       try {
         // Obtener detalles del sensor actual
         const sensorResponse = await fetch(
-          `https://water-efficient-control.onrender.com/sensors/${id}/9f17ab0b-d0be-40d5-b9ca-0844645e38d6`
+          `https://water-efficient-control.onrender.com/sensors/${id}/${userToken}`
         );
         const sensorData = await sensorResponse.json();
         setSensor(sensorData);
 
         // Establecer los valores actuales del sensor en los estados
         setTipo(sensorData.tipo);
-        setRango(sensorData.rango);
-        setUbicacion(sensorData.ubicacion);
 
         // Obtener detalles del recipiente del sensor
         if (sensorData.id_recipiente) {
           const recipienteResponse = await fetch(
-            `https://water-efficient-control.onrender.com/containers/${sensorData.id_recipiente}/9f17ab0b-d0be-40d5-b9ca-0844645e38d6`
+            `https://water-efficient-control.onrender.com/containers/${sensorData.id_recipiente}/${userToken}`
           );
           const recipienteData = await recipienteResponse.json();
           setRecipiente(`${recipienteData.tipo || "No disponible"} - ${sensorData.id_recipiente} (${recipienteData.ubicacion || "No disponible"})`);
@@ -49,9 +72,14 @@ const EditarSensor = ({ route, navigation }) => {
     };
 
     fetchData();
-  }, [id]);
+  }, [id]); // Dependiendo del `id` del sensor, se vuelve a cargar la información
 
   const handleSubmit = () => {
+    if (!token) {
+      setError('No se encontró un token válido.');
+      return;
+    }
+
     setLoading(true);
     setError('');
 
@@ -61,7 +89,7 @@ const EditarSensor = ({ route, navigation }) => {
 
     // Enviar los datos actualizados del sensor al servidor
     fetch(
-      `https://water-efficient-control.onrender.com/sensors/${id}/9f17ab0b-d0be-40d5-b9ca-0844645e38d6`,
+      `https://water-efficient-control.onrender.com/sensors/${id}/${token}`,
       {
         method: 'PUT',
         headers: {
@@ -73,7 +101,7 @@ const EditarSensor = ({ route, navigation }) => {
       .then((response) => response.json())
       .then(() => {
         setLoading(false);
-        navigation.navigate('Sensores' ); // Redirigir a la página de detalles con el ID del sensor
+        navigation.navigate('Sensores'); // Redirigir a la página de sensores
       })
       .catch((error) => {
         console.error('Error updating sensor:', error);
@@ -117,8 +145,6 @@ const EditarSensor = ({ route, navigation }) => {
               <Picker.Item label="Sensor de TDS" value="Sensor de TDS" />
             </Picker>
           </View>
-
-          
         </>
       )}
 
@@ -175,7 +201,7 @@ const styles = StyleSheet.create({
     color: 'red',
     marginBottom: 20,
   },
-  pickerContainer: {
+  pickerSensor: {
     borderWidth: 1,
     borderColor: '#ccc',
     borderRadius: 8,

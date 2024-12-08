@@ -2,6 +2,24 @@ import React, { useState } from 'react';
 import { View, Text, TextInput, Alert, StyleSheet, TouchableOpacity } from 'react-native';
 import { Picker } from '@react-native-picker/picker';
 import { LinearGradient } from 'expo-linear-gradient';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+
+const getToken = async () => {
+  try {
+    const token = await AsyncStorage.getItem('userToken');
+    if (token !== null) {
+      console.log('Token recuperado:', token);
+      return token; // Aquí devuelves el token
+    } else {
+      console.log('No se encontró ningún token');
+      return null;
+    }
+  } catch (error) {
+    console.error('Error al recuperar el token:', error);
+    return null;
+  }
+};
+
 
 const CrearContenedor = () => {
   const [tipo, setTipo] = useState('');
@@ -11,61 +29,78 @@ const CrearContenedor = () => {
   const [error, setError] = useState('');
 
   const BASE_URL = 'https://water-efficient-control.onrender.com/';
-  const token = '58a6bfc2-67f0-4a8c-bd09-d5e0d2300af1'; // Token actualizado
+   // Token actualizado
 
-  const handleSubmit = () => {
+   const handleSubmit = async () => {
     // Validaciones básicas
     if (!tipo || !ubicacion) {
       setError('Por favor completa todos los campos requeridos.');
       return;
     }
-
+  
     if (capacidad < 1) {
       setError('La capacidad debe ser al menos 1 litro.');
       return;
     }
-
+  
     setLoading(true);
     setError('');
-
-    const newContainer = {
-      tipo,
-      capacidad,
-      ubicacion,
-      token, // Incluir el token en la solicitud
-    };
-
-    fetch(`${BASE_URL}containers/crear/`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(newContainer),
-    })
-      .then((response) => {
-        if (!response.ok) {
-          return response.json().then((errorData) => {
-            throw new Error(errorData.message || 'Error en el servidor.');
-          });
-        }
-        return response.json();
-      })
-      .then((data) => {
-        console.log('Contenedor creado:', data);
-        // Restablecer campos
-        setTipo('');
-        setCapacidad(1);
-        setUbicacion('');
+  
+    try {
+      // Recuperar el token de AsyncStorage
+      const token = await getToken();
+  
+      if (!token) {
+        setError('No se encontró un token válido. Por favor, inicia sesión nuevamente.');
         setLoading(false);
-        Alert.alert('Éxito', 'Contenedor creado con éxito');
-      })
-      .catch((error) => {
-        console.error('Error al crear el contenedor:', error);
-        setError(error.message || 'Hubo un error al enviar el formulario.');
-        setLoading(false);
+        return;
+      }
+  
+      const newContainer = {
+        tipo,
+        capacidad,
+        ubicacion,
+        token
+      };
+  
+      // Realizar la solicitud
+      const response = await fetch(`${BASE_URL}containers/crear/`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`, // Incluir el token en los headers
+        },
+        body: JSON.stringify(newContainer),
       });
+  
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Error en el servidor.');
+      }
+  
+      const data = await response.json();
+      console.log('Contenedor creado:', data);
+  
+      // Restablecer campos
+      setTipo('');
+      setCapacidad(1);
+      setUbicacion('');
+      setLoading(false);
+      Alert.alert('Éxito', 'Contenedor creado con éxito', [
+        {
+          text: 'OK',
+          onPress: () => {
+            // Navigate to Home screen after creation
+            navigation.navigate('Contenedores');
+          },
+        },
+      ]);
+    } catch (error) {
+      console.error('Error al crear el contenedor:', error);
+      setError(error.message || 'Hubo un error al enviar el formulario.');
+      setLoading(false);
+    }
   };
-
   return (
     <LinearGradient colors={['#0f8c8c', '#025959', '#012840']} style={styles.container}>
       <Text style={styles.title}>Crear Contenedor</Text>

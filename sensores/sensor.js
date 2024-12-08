@@ -5,6 +5,23 @@ import CrearSensor from "./crearsensor";
 import EditarSensor from "./editarsensor";
 import VerSensor from "./versensor";
 import { LinearGradient } from "expo-linear-gradient";
+import AsyncStorage from '@react-native-async-storage/async-storage';
+
+const getToken = async () => {
+  try {
+    const token = await AsyncStorage.getItem('userToken');
+    if (token !== null) {
+      console.log('Token recuperado:', token);
+      return token; // Aquí devuelves el token
+    } else {
+      console.log('No se encontró ningún token');
+      return null;
+    }
+  } catch (error) {
+    console.error('Error al recuperar el token:', error);
+    return null;
+  }
+};
 
 const SensorItem = ({ id, ubicacion, tipo, navigation, onDelete }) => {
   return (
@@ -35,19 +52,37 @@ const SensoresScreen = ({ navigation }) => {
       setLoading(true);
       setError(null);
       try {
+        const token = await getToken(); // Recupera el token
+        if (!token) {
+          setError("No se encontró un token válido.");
+          setLoading(false);
+          return;
+        }
+  
         const response = await fetch(
-          "https://water-efficient-control.onrender.com/sensors/9f17ab0b-d0be-40d5-b9ca-0844645e38d6"
+          `https://water-efficient-control.onrender.com/sensors/${token}`
         );
+  
+        if (!response.ok) {
+          throw new Error("Error al obtener los sensores,no tienes sensores");
+        }
+  
         const sensors = await response.json();
-
+  
         const sensorsWithDetails = await Promise.all(
           sensors.map(async (sensor) => {
             if (sensor.id_recipiente) {
               try {
                 const containerResponse = await fetch(
-                  `https://water-efficient-control.onrender.com/containers/${sensor.id_recipiente}/9f17ab0b-d0be-40d5-b9ca-0844645e38d6`
+                  `https://water-efficient-control.onrender.com/containers/${sensor.id_recipiente}/${token}`
                 );
+  
+                if (!containerResponse.ok) {
+                  throw new Error("Error al obtener el contenedor,no tienes contenedores");
+                }
+  
                 const containerData = await containerResponse.json();
+  
                 return {
                   ...sensor,
                   ubicacion: `${containerData.tipo || "No disponible"}-${sensor.id_recipiente} ${containerData.ubicacion || "No disponible"}`,
@@ -67,7 +102,7 @@ const SensoresScreen = ({ navigation }) => {
             }
           })
         );
-
+  
         setData(sensorsWithDetails);
       } catch (err) {
         console.error("Error fetching sensors or containers:", err);
@@ -76,11 +111,17 @@ const SensoresScreen = ({ navigation }) => {
         setLoading(false);
       }
     };
-
+  
     fetchSensorsWithDetails();
   }, []);
-
-  const handleDelete = (id) => {
+  
+  const handleDelete = async (id) => {
+    const token = await getToken();
+    if (!token) {
+      Alert.alert("Error", "No se encontró un token válido.");
+      return;
+    }
+  
     Alert.alert(
       "Confirmar eliminación",
       "¿Estás seguro de que deseas eliminar este sensor?",
@@ -88,24 +129,28 @@ const SensoresScreen = ({ navigation }) => {
         { text: "Cancelar", style: "cancel" },
         {
           text: "Eliminar",
-          onPress: () => {
-            fetch(`https://water-efficient-control.onrender.com/sensors/${id}/9f17ab0b-d0be-40d5-b9ca-0844645e38d6`, {
-              method: "DELETE",
-            })
-              .then((response) => response.json())
-              .then(() => {
-                console.log("Sensor eliminado");
-                setData((prevData) => prevData.filter((item) => item.id_sensor !== id));
-              })
-              .catch((error) => {
-                console.error("Error eliminando el sensor:", error);
-              });
+          onPress: async () => {
+            try {
+              const response = await fetch(
+                `https://water-efficient-control.onrender.com/sensors/${id}/${token}`,
+                { method: "DELETE" }
+              );
+  
+              if (!response.ok) {
+                throw new Error("Error eliminando el sensor.");
+              }
+  
+              console.log("Sensor eliminado");
+              setData((prevData) => prevData.filter((item) => item.id_sensor !== id));
+            } catch (error) {
+              console.error("Error eliminando el sensor:", error);
+              Alert.alert("Error", "Hubo un problema al eliminar el sensor.");
+            }
           },
         },
       ]
     );
   };
-
   return (
     <LinearGradient colors={["#0f8c8c", "#025959", "#012840"]} style={styles.gradient}>
       <View style={styles.screenContainer}>

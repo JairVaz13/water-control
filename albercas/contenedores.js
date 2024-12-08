@@ -5,6 +5,24 @@ import { LinearGradient } from 'expo-linear-gradient';
 import CrearContenedor from './crearContnedor';
 import EditarContenedor from './editarContenedor';
 import VerContenedor from './verContenedor';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+
+const getToken = async () => {
+  try {
+    const token = await AsyncStorage.getItem('userToken');
+    if (token !== null) {
+      console.log('Token recuperado:', token);
+      return token; // Aquí devuelves el token
+    } else {
+      console.log('No se encontró ningún token');
+      return null;
+    }
+  } catch (error) {
+    console.error('Error al recuperar el token:', error);
+    return null;
+  }
+};
+
 
 const AlbercaItem = ({ id, ubicacion, tipo, capacidad, navigation }) => {
   return (
@@ -36,16 +54,35 @@ const ContenedoresScreen = ({ navigation }) => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch("https://water-efficient-control.onrender.com/containers/58a6bfc2-67f0-4a8c-bd09-d5e0d2300af1")
-      .then((response) => response.json())
-      .then((result) => {
+    const fetchContainers = async () => {
+      setLoading(true);
+      try {
+        // Obtener el token desde AsyncStorage
+        const token = await getToken();
+
+        if (!token) {
+          console.error("Token no disponible. Por favor, inicia sesión.");
+          setLoading(false);
+          return;
+        }
+
+        // Realizar la solicitud con el token en la URL
+        const response = await fetch(`https://water-efficient-control.onrender.com/containers/${token}`);
+
+        if (!response.ok) {
+          throw new Error("Error al obtener los contenedores.");
+        }
+
+        const result = await response.json();
         setData(result);
-        setLoading(false);
-      })
-      .catch((error) => {
+      } catch (error) {
         console.error("Error fetching data:", error);
+      } finally {
         setLoading(false);
-      });
+      }
+    };
+
+    fetchContainers();
   }, []);
 
   return (
@@ -78,6 +115,7 @@ const ContenedoresScreen = ({ navigation }) => {
     </LinearGradient>
   );
 };
+
 
 const Stack = createStackNavigator();
 

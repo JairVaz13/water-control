@@ -1,26 +1,59 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, Button, StyleSheet, ActivityIndicator, TouchableOpacity } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+
+const getToken = async () => {
+  try {
+    const token = await AsyncStorage.getItem('userToken');
+    if (token !== null) {
+      console.log('Token recuperado:', token);
+      return token; // Aquí devuelves el token
+    } else {
+      console.log('No se encontró ningún token');
+      return null;
+    }
+  } catch (error) {
+    console.error('Error al recuperar el token:', error);
+    return null;
+  }
+};
 
 const VerContenedor = ({ route, navigation }) => {
-  const { id } = route.params; // Get the ID of the container to view
+  const { id } = route.params; // Obtiene el ID del contenedor a ver
   const [container, setContainer] = useState(null);
   const [error, setError] = useState('');
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Fetch the container data
-    fetch(`https://water-efficient-control.onrender.com/containers/${id}/58a6bfc2-67f0-4a8c-bd09-d5e0d2300af1`)
-      .then((response) => {
-        if (!response.ok) {
-          throw new Error('Error fetching container data.');
+    const fetchContainerData = async () => {
+      setLoading(true);
+      try {
+        const token = await getToken(); // Obtén el token de forma asíncrona
+
+        if (!token) {
+          throw new Error('Token no disponible. Por favor, inicia sesión.');
         }
-        return response.json();
-      })
-      .then((data) => setContainer(data))
-      .catch((error) => {
+
+        const response = await fetch(
+          `https://water-efficient-control.onrender.com/containers/${id}/${token}`
+        );
+
+        if (!response.ok) {
+          throw new Error('Error al obtener los datos del contenedor.');
+        }
+
+        const data = await response.json();
+        setContainer(data);
+      } catch (error) {
         console.error('Error fetching container data:', error);
         setError('Hubo un error al obtener los datos del contenedor.');
-      });
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchContainerData();
   }, [id]);
 
   if (error) {
@@ -34,11 +67,22 @@ const VerContenedor = ({ route, navigation }) => {
     );
   }
 
-  if (!container) {
+  if (loading) {
     return (
       <LinearGradient colors={['#0f8c8c', '#025959', '#012840']} style={styles.container}>
         <ActivityIndicator size="large" color="#fff" />
         <Text style={styles.loadingText}>Cargando...</Text>
+      </LinearGradient>
+    );
+  }
+
+  if (!container) {
+    return (
+      <LinearGradient colors={['#0f8c8c', '#025959', '#012840']} style={styles.container}>
+        <Text style={styles.errorText}>Contenedor no encontrado.</Text>
+        <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
+          <Text style={styles.buttonText}>Regresar</Text>
+        </TouchableOpacity>
       </LinearGradient>
     );
   }

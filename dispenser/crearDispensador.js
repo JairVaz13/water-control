@@ -1,22 +1,41 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, Button, StyleSheet, Alert } from 'react-native';
 import { Picker } from '@react-native-picker/picker';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
-const CrearDispensador = () => {
+const getToken = async () => {
+  try {
+    const token = await AsyncStorage.getItem('userToken');
+    if (token !== null) {
+      console.log('Token recuperado:', token);
+      return token; // Devuelve el token
+    } else {
+      console.log('No se encontró ningún token');
+      return null;
+    }
+  } catch (error) {
+    console.error('Error al recuperar el token:', error);
+    return null;
+  }
+};
+
+const CrearDispensador = ({ route,navigation }) => {
   const [tipo, setTipo] = useState('');
   const [contenedores, setContenedores] = useState([]);
   const [contenedorSeleccionado, setContenedorSeleccionado] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
-  const token = '9f17ab0b-d0be-40d5-b9ca-0844645e38d6'; 
-
-  
   useEffect(() => {
     const fetchContenedores = async () => {
       try {
+        const token = await getToken();
+        if (!token) {
+          throw new Error('No se encontró un token válido.');
+        }
+
         const response = await fetch(
-          'https://water-efficient-control.onrender.com/containers/9f17ab0b-d0be-40d5-b9ca-0844645e38d6',
+          `https://water-efficient-control.onrender.com/containers/${token}`
         );
         if (!response.ok) {
           throw new Error('Error al obtener la lista de contenedores.');
@@ -32,87 +51,83 @@ const CrearDispensador = () => {
     fetchContenedores();
   }, []);
 
-  const handleSubmit = () => {
-    if (!tipo || !contenedorSeleccionado) {
+  const handleSubmit = async () => {
+    if (!contenedorSeleccionado) {
       setError('Por favor completa todos los campos requeridos.');
       return;
     }
-  
+
     setLoading(true);
     setError('');
-  
-    const newDispensador = {
-      tipo,
-      token,
-      id_recipienre: parseInt(contenedorSeleccionado, 10), // Cambiar al nombre esperado por el backend
-    };
-  
-    fetch('https://water-efficient-control.onrender.com/dispensadores/crear/', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(newDispensador),
-    })
-      .then((response) => {
-        if (!response.ok) {
-          return response.text().then((text) => {
-            console.error('Respuesta del servidor:', text); // Debug detallado
-            throw new Error('Error en la solicitud al servidor.');
-          });
+
+    try {
+      const token = await getToken();
+      if (!token) {
+        throw new Error('No se encontró un token válido.');
+      }
+
+      const newDispensador = {
+        estado: '0',
+        id_recipiente: parseInt(contenedorSeleccionado, 10),
+        token,        // Cambiar al nombre esperado por el backend
+      };
+
+      const response = await fetch(
+        'https://water-efficient-control.onrender.com/dispensadores/crear/',
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(newDispensador),
         }
-        return response.json();
-      })
-      .then((data) => {
-        console.log('Nuevo Dispensador agregado:', data);
-        setTipo('');
-        setContenedorSeleccionado('');
-        setLoading(false);
-        Alert.alert('Éxito', 'Dispensador creado con éxito');
-      })
-      .catch((error) => {
-        console.error('Error al agregar el Dispensador:', error);
-        setError(error.message || 'Hubo un error al enviar el formulario.');
-        setLoading(false);
-      });
+      );
+
+      if (!response.ok) {
+        const errorMessage = await response.text();
+        console.error('Error del servidor:', errorMessage);
+        throw new Error('Error en la solicitud al servidor.');
+      }
+
+      const data = await response.json();
+      console.log('Nuevo Dispensador agregado:', data);
+      setTipo('');
+      setContenedorSeleccionado('');
+      Alert.alert('Éxito', 'Dispensador creado con éxito', [
+        {
+          text: 'OK',
+          onPress: () => navigation.navigate('Dispensadores'), // Navegar a la pantalla de Dispensadores
+        },
+      ]);
+    } catch (error) {
+      console.error('Error al agregar el Dispensador:', error);
+      setError(error.message || 'Hubo un error al enviar el formulario.');
+    } finally {
+      setLoading(false);
+    }
   };
-  
 
   return (
     <View style={styles.mainContainer}>
-      <Text style={styles.title}>Crear Dispensador</Text>
+      <Text style={styles.title}>Agregar Dispensador a tu alberca</Text>
 
-      <View style={styles.container}>
-        <Text style={styles.label}>Tipo:</Text>
-        <View style={styles.pickerContainer}>
-          <Picker
-            selectedValue={tipo}
-            onValueChange={(itemValue) => setTipo(itemValue)}
-          >
-            <Picker.Item label="Selecciona un tipo" value="" />
-            <Picker.Item label="Dispensador de pH" value="Dispensador de pH" />
-            <Picker.Item label="Dispensador de TDS" value="Dispensador de TDS" />
-          </Picker>
-        </View>
-      </View>
-
+      
       <View style={styles.container}>
         <Text style={styles.label}>Contenedor:</Text>
         <View style={styles.pickerContainer}>
-        <Picker
-  selectedValue={contenedorSeleccionado}
-  onValueChange={(itemValue) => setContenedorSeleccionado(itemValue)}
->
-  <Picker.Item label="Selecciona un contenedor" value="" />
-  {contenedores.map((contenedor) => (
-            <Picker.Item
-              key={contenedor.id_recipiente} // Clave única usando id_recipiente
-              label={`${contenedor.tipo} - ${contenedor.ubicacion}`} // Etiqueta combinada
-              value={contenedor.id_recipiente} // Valor seleccionado
-            />
-          ))}
-        </Picker>
-
+          <Picker
+            selectedValue={contenedorSeleccionado}
+            onValueChange={(itemValue) => setContenedorSeleccionado(itemValue)}
+          >
+            <Picker.Item label="Selecciona un contenedor" value="" />
+            {contenedores.map((contenedor) => (
+              <Picker.Item
+                key={contenedor.id_recipiente}
+                label={`${contenedor.tipo || 'Tipo desconocido'} - ${contenedor.id_recipiente || 'ID desconocido'}`}
+                value={contenedor.id_recipiente}
+              />
+            ))}
+          </Picker>
         </View>
       </View>
 
