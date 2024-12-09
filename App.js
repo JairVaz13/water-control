@@ -11,7 +11,7 @@ import SensoresScreen from './sensores/sensor'; // Importa correctamente el arch
 import ReportsScreen from './reports/ReportsScreen'; // Pantalla de Reportes
 import DispenserScreen from './dispenser/DispenserScreen'; // Pantalla de Dispensador
 import CameraScreen from './camera/CameraScreen'; // Pantalla de la cámara
-
+import RecomendacionesScreen from './recomendaciones/RecomendacionesScreen'; // Pantalla de Recomendaciones
 
 
 const Stack = createStackNavigator();
@@ -28,6 +28,7 @@ export default function App() {
         <Stack.Screen name="Reports" component={ReportsScreen} />
         <Stack.Screen name="Dispenser" component={DispenserScreen} />
         <Stack.Screen name="Camera" component={CameraScreen} />
+        <Stack.Screen name="Recomendaciones" component={RecomendacionesScreen} />
       </Stack.Navigator>
     </NavigationContainer>
   );

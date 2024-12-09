@@ -24,7 +24,7 @@ const getToken = async () => {
   }
 };
 
-const DispensadorItem = ({ id, estado, ubicacion, navigation }) => {
+const DispensadorItem = ({ id, estado, ubicacion, navigation,handleDelete }) => {
   return (
     <View style={styles.itemContainer}>
       <Text style={styles.itemTitle}>Dispensador: {id || "No disponible"}</Text>
@@ -36,8 +36,13 @@ const DispensadorItem = ({ id, estado, ubicacion, navigation }) => {
         <TouchableOpacity style={styles.buttonGreen} onPress={() => navigation.navigate("Ver", { id })}>
           <Text style={styles.buttonText}>Ver</Text>
         </TouchableOpacity>
-        <TouchableOpacity style={styles.buttonBlue} onPress={() => navigation.navigate("Editar", { id })}>
+       {/* 
+       <TouchableOpacity style={styles.buttonBlue} onPress={() => navigation.navigate("Editar", { id })}>
           <Text style={styles.buttonText}>Actualizar</Text>
+        </TouchableOpacity>
+        */}
+       <TouchableOpacity style={styles.buttonRed} onPress={() => handleDelete(id)}>
+          <Text style={styles.buttonText}>Eliminar</Text>
         </TouchableOpacity>
       </View>
     </View>
@@ -119,7 +124,42 @@ const DispensadoresScreen = ({ navigation }) => {
 
     fetchDispensadorsWithDetails();
   }, []);
-
+  const handleDelete = async (id) => {
+    const token = await getToken();
+    if (!token) {
+      Alert.alert("Error", "No se encontró un token válido.");
+      return;
+    }
+  
+    Alert.alert(
+      "Confirmar eliminación",
+      "¿Estás seguro de que deseas eliminar este dispensador?",
+      [
+        { text: "Cancelar", style: "cancel" },
+        {
+          text: "Eliminar",
+          onPress: async () => {
+            try {
+              const response = await fetch(
+                `https://water-efficient-control.onrender.com/dispensadores/${id}?token=${token}`,
+                { method: "DELETE" }
+              );
+  
+              if (!response.ok) {
+                throw new Error("Error eliminando el dispensador.");
+              }
+  
+              console.log("Dispensador eliminado");
+              setData((prevData) => prevData.filter((item) => item.id_dispensador !== id));
+            } catch (error) {
+              console.error("Error eliminando el dispensador:", error);
+              Alert.alert("Error", "Hubo un problema al eliminar el dispensador.");
+            }
+          },
+        },
+      ]
+    );
+  };
   return (
     <LinearGradient colors={["#0f8c8c", "#025959", "#012840"]} style={styles.gradient}>
       <View style={styles.screenContainer}>
@@ -133,9 +173,10 @@ const DispensadoresScreen = ({ navigation }) => {
             <DispensadorItem
               key={item.id_dispensador}
               id={item.id_dispensador}
-              estado={item.estado}
+              estado={parseInt(item.estado, 10)} 
               ubicacion={item.ubicacion}
               navigation={navigation}
+              handleDelete={handleDelete}
             />
           ))
         ) : (
@@ -247,6 +288,13 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: 'red',
     textAlign: 'center',
+  },
+  buttonRed: {
+    backgroundColor: '#d32f2f', // Color rojo para eliminar
+    padding: 10,
+    borderRadius: 8,
+    flex: 1,
+    marginLeft: 5,
   },
 });
 

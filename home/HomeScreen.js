@@ -90,9 +90,9 @@ const HomeScreen = ({ navigation }) => {
         >
           <TouchableOpacity
             style={styles.button}
-            onPress={() => navigation.navigate("Reports")}
+            onPress={() => navigation.navigate("Recomendaciones")}
           >
-            <Text style={styles.buttonText}>Reportes</Text>
+            <Text style={styles.buttonText}>Recomendaciones</Text>
           </TouchableOpacity>
         </Animatable.View>
 
@@ -123,6 +123,20 @@ const HomeScreen = ({ navigation }) => {
             onPress={() => navigation.navigate("Dispenser")}
           >
             <Text style={styles.buttonText}>Dispensador</Text>
+          </TouchableOpacity>
+        </Animatable.View>
+        {/* Botón Dispenser */}
+        <Animatable.View
+          animation="slideInUp"
+          duration={1200}
+          delay={800}
+          style={styles.buttonWrapper}
+        >
+          <TouchableOpacity
+            style={styles.button}
+            onPress={() => navigation.navigate("Reports")}
+          >
+            <Text style={styles.buttonText}>Reportes</Text>
           </TouchableOpacity>
         </Animatable.View>
       </View>

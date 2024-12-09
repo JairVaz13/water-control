@@ -36,6 +36,9 @@ const SensorItem = ({ id, ubicacion, tipo, navigation, onDelete }) => {
         <TouchableOpacity style={styles.buttonBlue} onPress={() => navigation.navigate("Editar", { id })}>
           <Text style={styles.buttonText}>Actualizar</Text>
         </TouchableOpacity>
+        <TouchableOpacity style={styles.buttonRed} onPress={() => onDelete(id)}>
+          <Text style={styles.buttonText}>Eliminar</Text>
+        </TouchableOpacity>
         
       </View>
     </View>
@@ -273,6 +276,13 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#ccc',
     textAlign: 'center',
+  },
+  buttonRed: {
+    backgroundColor: '#d32f2f', // Color rojo para eliminar
+    padding: 10,
+    borderRadius: 8,
+    flex: 1,
+    marginLeft: 5,
   },
 });
 
