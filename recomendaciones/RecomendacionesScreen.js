@@ -14,29 +14,25 @@ const getToken = async () => {
   }
 };
 
-const RecomendacionesScreen = () => {
-  const [contenedores, setContenedores] = useState([]); // Almacena los contenedores
-  const [contenedorSeleccionado, setContenedorSeleccionado] = useState(''); // ID del contenedor seleccionado
-  const [loading, setLoading] = useState(false); // Indicador de carga
+const RecomendacionesScreen = ({ navigation }) => { // Recibe navigation aquí
+  const [contenedores, setContenedores] = useState([]);
+  const [contenedorSeleccionado, setContenedorSeleccionado] = useState('');
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
   const BASE_URL = 'https://water-efficient-control.onrender.com/';
 
-  // Obtiene los contenedores al cargar el componente
   useEffect(() => {
     const fetchContenedores = async () => {
       try {
         const token = await getToken();
         if (!token) throw new Error('No se encontró un token válido.');
 
-        const response = await fetch(`${BASE_URL}containers/${token}`, {
-          
-        });
-
+        const response = await fetch(`${BASE_URL}containers/${token}`);
         if (!response.ok) throw new Error('Error al obtener la lista de contenedores.');
 
         const data = await response.json();
-        setContenedores(data || []); // Manejo del array vacío
+        setContenedores(data || []);
       } catch (error) {
         console.error('Error al obtener los contenedores:', error);
         setError('No se pudieron cargar los contenedores.');
@@ -61,7 +57,6 @@ const RecomendacionesScreen = () => {
 
       const response = await fetch(`${BASE_URL}ia/recommendations?id_recipiente=${contenedorSeleccionado}`, {
         method: 'GET',
-        
       });
 
       if (!response.ok) {
@@ -70,9 +65,17 @@ const RecomendacionesScreen = () => {
       }
 
       const data = await response.json();
-      console.log('Recomendación obtenida:', data);
 
-      Alert.alert('Éxito', 'Recomendación obtenida con éxito.');
+      Alert.alert(
+        'Éxito',
+        'Recomendación obtenida con éxito.',
+        [
+          {
+            text: 'OK',
+            onPress: () => navigation.navigate('MostrarRecomendacion', { recomendacion: data }), // Navegación exitosa
+          },
+        ]
+      );
     } catch (error) {
       console.error('Error al obtener la recomendación:', error);
       setError(error.message || 'Hubo un error al obtener la recomendación.');
@@ -115,6 +118,7 @@ const RecomendacionesScreen = () => {
     </LinearGradient>
   );
 };
+
 
 const styles = StyleSheet.create({
   container: {
