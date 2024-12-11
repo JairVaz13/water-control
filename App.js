@@ -10,10 +10,10 @@ import AlbercasScreen from "./albercas/contenedores"; // Ajusta la ruta si es ne
 import SensoresScreen from './sensores/sensor'; // Importa correctamente el archivo SensoresScreen
 import ReportsScreen from './reports/ReportsScreen'; // Pantalla de Reportes
 import DispenserScreen from './dispenser/DispenserScreen'; // Pantalla de Dispensador
-import CameraScreen from './camera/CameraScreen'; // Pantalla de la cámara
+import RecomendacionesScreenFoto from './recomendacionesFoto/RecomendacionesScreenFoto'; // Pantalla de la cámara
 import RecomendacionesScreen from './recomendaciones/RecomendacionesScreen'; // Pantalla de Recomendaciones
 import MostrarRecomendacion from './recomendaciones/mostrarRecomendacion'; // Pantalla de Mostrar Recomendación
-
+import MostrarRecomendacionFoto from "./recomendacionesFoto/mostrarRecomendacionFoto";
 const Stack = createStackNavigator();
 
 export default function App() {
@@ -27,9 +27,10 @@ export default function App() {
         <Stack.Screen name="Sensors" component={SensoresScreen} />
         <Stack.Screen name="Reports" component={ReportsScreen} />
         <Stack.Screen name="Dispenser" component={DispenserScreen} />
-        <Stack.Screen name="Camera" component={CameraScreen} />
         <Stack.Screen name="Recomendaciones" component={RecomendacionesScreen} />
         <Stack.Screen name="MostrarRecomendacion" component={MostrarRecomendacion} />
+        <Stack.Screen name="RecomendacionesFoto" component={RecomendacionesScreenFoto} />
+        <Stack.Screen name="MostrarRecomendacionFoto" component={MostrarRecomendacionFoto} />
       </Stack.Navigator>
     </NavigationContainer>
   );

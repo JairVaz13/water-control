@@ -144,7 +144,7 @@ const HomeScreen = ({ navigation }) => {
       {/* Floating Button */}
       <TouchableOpacity
         style={styles.floatingButton}
-        onPress={() => navigation.navigate("Camera")}
+        onPress={() => navigation.navigate("RecomendacionesFoto")}
       >
         <MaterialIcons name="camera-alt" size={24} color="#fff" />
       </TouchableOpacity>
