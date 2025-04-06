@@ -12,14 +12,11 @@ const getToken = async () => {
   try {
     const token = await AsyncStorage.getItem('userToken');
     if (token !== null) {
-      console.log('Token recuperado:', token);
       return token;
     } else {
-      console.log('No se encontró ningún token');
       return null;
     }
   } catch (error) {
-    console.error('Error al recuperar el token:', error);
     return null;
   }
 };
@@ -54,7 +51,7 @@ const DispensadoresScreen = ({ navigation }) => {
       setLoading(true);
       setError(null);
       try {
-        const token = await getToken(); // Recupera el token
+        const token = await getToken();
         if (!token) {
           setError("No se encontró un token válido.");
           setLoading(false);
@@ -64,7 +61,7 @@ const DispensadoresScreen = ({ navigation }) => {
         const response = await fetch(`https://water-efficient-control.onrender.com/dispensadores?token=${token}`);
         
         if (!response.ok) {
-          throw new Error("Error al obtener los dispensadores. No tienes dispensadores.");
+          throw new Error("Error al obtener los dispensadores.");
         }
 
         const dispensadors = await response.json();
@@ -81,7 +78,7 @@ const DispensadoresScreen = ({ navigation }) => {
                 );
 
                 if (!containerResponse.ok) {
-                  throw new Error("Error al obtener el contenedor. No tienes contenedores.");
+                  throw new Error("Error al obtener el contenedor.");
                 }
 
                 const containerData = await containerResponse.json();
@@ -90,7 +87,6 @@ const DispensadoresScreen = ({ navigation }) => {
                   ubicacion: `${containerData.tipo || "No disponible"}-${dispensador.id_recipiente} ${containerData.ubicacion || "No disponible"}`,
                 };
               } catch (error) {
-                console.error(`Error fetching container for ${dispensador.id_recipiente}:`, error);
                 return {
                   ...dispensador,
                   ubicacion: `${dispensador.id_recipiente} - No disponible (${dispensador.tipo})`,
@@ -107,7 +103,6 @@ const DispensadoresScreen = ({ navigation }) => {
 
         setData(dispensadorsWithDetails);
       } catch (err) {
-        console.error("Error fetching dispensadors or containers:", err);
         setError(err.message || "Error cargando datos. Intenta nuevamente más tarde.");
       } finally {
         setLoading(false);
@@ -142,10 +137,8 @@ const DispensadoresScreen = ({ navigation }) => {
                 throw new Error("Error eliminando el dispensador.");
               }
 
-              console.log("Dispensador eliminado");
               setData((prevData) => prevData.filter((item) => item.id_dispensador !== id));
             } catch (error) {
-              console.error("Error eliminando el dispensador:", error);
               Alert.alert("Error", "Hubo un problema al eliminar el dispensador.");
             }
           },
@@ -158,8 +151,7 @@ const DispensadoresScreen = ({ navigation }) => {
     <LinearGradient colors={["#0f8c8c", "#025959", "#012840"]} style={styles.gradient}>
       <View style={styles.screenContainer}>
         <Text style={styles.header}>Dispensadores</Text>
-        
-        {/* Muestra el mensaje de carga o el indicador de carga */}
+
         {error ? (
           <Text style={styles.errorText}>{error}</Text>
         ) : loading ? (
@@ -181,7 +173,7 @@ const DispensadoresScreen = ({ navigation }) => {
         ) : (
           <Text style={styles.noDataText}>No hay dispensadores registrados.</Text>
         )}
-        
+
         <TouchableOpacity style={styles.createButton} onPress={() => navigation.navigate("Crear")}>
           <Text style={styles.createButtonText}>+ Crear</Text>
         </TouchableOpacity>
@@ -190,7 +182,6 @@ const DispensadoresScreen = ({ navigation }) => {
   );
 };
 
-// Configuración de la navegación
 const Stack = createStackNavigator();
 
 const Dispensadores = () => {
@@ -209,9 +200,10 @@ const styles = StyleSheet.create({
   screenContainer: {
     padding: 20,
     flex: 1,
+    justifyContent: 'flex-start',
   },
   header: {
-    fontSize: 26,
+    fontSize: 28,
     fontWeight: 'bold',
     marginBottom: 20,
     color: '#fff',
@@ -221,16 +213,16 @@ const styles = StyleSheet.create({
   itemContainer: {
     padding: 20,
     marginBottom: 15,
-    backgroundColor: 'rgba(255, 255, 255, 0.1)',
-    borderRadius: 15,
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    borderRadius: 20,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 3 },
-    shadowOpacity: 0.1,
-    shadowRadius: 10,
-    elevation: 5,
+    shadowOpacity: 0.2,
+    shadowRadius: 12,
+    elevation: 7,
   },
   itemTitle: {
-    fontSize: 18,
+    fontSize: 20,
     fontWeight: 'bold',
     color: '#fff',
   },
@@ -246,17 +238,17 @@ const styles = StyleSheet.create({
   },
   buttonGreen: {
     backgroundColor: '#4caf50',
-    padding: 12,
-    borderRadius: 10,
+    padding: 14,
+    borderRadius: 12,
     flex: 1,
-    marginRight: 8,
+    marginRight: 10,
   },
   buttonRed: {
     backgroundColor: '#d32f2f',
-    padding: 12,
-    borderRadius: 10,
+    padding: 14,
+    borderRadius: 12,
     flex: 1,
-    marginLeft: 8,
+    marginLeft: 10,
   },
   buttonText: {
     color: '#fff',
@@ -265,10 +257,10 @@ const styles = StyleSheet.create({
   },
   createButton: {
     backgroundColor: '#00a8cc',
-    padding: 16,
-    borderRadius: 10,
+    padding: 18,
+    borderRadius: 12,
     marginTop: 20,
-    elevation: 3,
+    elevation: 5,
   },
   createButtonText: {
     color: '#fff',

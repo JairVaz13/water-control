@@ -31,7 +31,7 @@ const HomeScreen = ({ navigation }) => {
           data={data}
           width={350}
           height={250}
-          strokeWidth={10}
+          strokeWidth={12}
           radius={32}
           chartConfig={{
             backgroundColor: "#0f8c8c",
@@ -93,32 +93,40 @@ const HomeScreen = ({ navigation }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    paddingHorizontal: 16,
+    paddingHorizontal: 20,
     paddingTop: 50,
+    paddingBottom: 20,
   },
   header: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    marginBottom: 16,
+    marginBottom: 20,
   },
   title: {
-    fontSize: 24,
+    fontSize: 28,
     fontWeight: "bold",
     color: "#fff",
+    letterSpacing: 1,
   },
   logo: {
-    width: 30,
-    height: 30,
-    borderRadius: 15,
+    width: 35,
+    height: 35,
+    borderRadius: 17,
+    borderWidth: 2,
+    borderColor: "#fff",
   },
   chartContainer: {
-    marginBottom: 30,
+    marginBottom: 40,
     alignItems: "center",
     marginTop: 20,
   },
   chart: {
-    borderRadius: 10,
+    borderRadius: 12,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 5,
   },
   buttonsContainer: {
     flexDirection: "row",
@@ -128,32 +136,36 @@ const styles = StyleSheet.create({
   },
   buttonWrapper: {
     width: "48%",
-    marginBottom: 10,
+    marginBottom: 15,
   },
   button: {
     backgroundColor: "#00a8cc",
-    padding: 10,
+    paddingVertical: 15,
+    paddingHorizontal: 20,
+    borderRadius: 10,
     alignItems: "center",
-    borderRadius: 8,
+    justifyContent: "center",
+    elevation: 5,
   },
   buttonText: {
     color: "#fff",
+    fontSize: 16,
     fontWeight: "bold",
   },
   floatingButton: {
     position: "absolute",
-    bottom: 20,
-    right: 20,
+    bottom: 25,
+    right: 25,
     backgroundColor: "#7B61FF",
-    width: 60,
-    height: 60,
-    borderRadius: 30,
+    width: 70,
+    height: 70,
+    borderRadius: 35,
     alignItems: "center",
     justifyContent: "center",
     shadowColor: "#000",
-    shadowOffset: { width: 0, height: 1 },
+    shadowOffset: { width: 0, height: 5 },
     shadowOpacity: 0.3,
-    shadowRadius: 3,
+    shadowRadius: 7,
   },
 });
 
