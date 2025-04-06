@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from "react";
-import { View, Text, Button, StyleSheet } from "react-native";
+import { View, Text, Button, StyleSheet, ActivityIndicator, TouchableOpacity, Animated } from "react-native";
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { LinearGradient } from 'expo-linear-gradient';
 
+// Función para recuperar el token de AsyncStorage
 const getToken = async () => {
   try {
     const token = await AsyncStorage.getItem('userToken');
@@ -26,7 +28,6 @@ const VerDispensador = ({ route, navigation }) => {
   const [token, setToken] = useState(null);
 
   useEffect(() => {
-    // Obtener el token y luego proceder con la carga del Dispensador
     const fetchTokenAndDispensadorDetails = async () => {
       const token = await getToken();
       if (!token) {
@@ -82,72 +83,128 @@ const VerDispensador = ({ route, navigation }) => {
 
   if (error) {
     return (
-      <View style={styles.container}>
+      <LinearGradient colors={['#0f8c8c', '#025959', '#012840']} style={styles.container}>
         <Text style={styles.error}>{error}</Text>
-        <Button title="Regresar" onPress={() => navigation.goBack()} />
-      </View>
+        <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
+          <Text style={styles.buttonText}>Regresar</Text>
+        </TouchableOpacity>
+      </LinearGradient>
     );
   }
 
   if (loading) {
     return (
-      <View style={styles.container}>
+      <LinearGradient colors={['#0f8c8c', '#025959', '#012840']} style={styles.container}>
+        <ActivityIndicator size="large" color="#fff" />
         <Text style={styles.loading}>Cargando datos del Dispensador...</Text>
-      </View>
+      </LinearGradient>
     );
   }
 
   if (!container) {
     return (
-      <View style={styles.container}>
+      <LinearGradient colors={['#0f8c8c', '#025959', '#012840']} style={styles.container}>
         <Text style={styles.error}>No se encontraron detalles del Dispensador.</Text>
-        <Button title="Regresar" onPress={() => navigation.goBack()} />
-      </View>
+        <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
+          <Text style={styles.buttonText}>Regresar</Text>
+        </TouchableOpacity>
+      </LinearGradient>
     );
   }
 
   return (
-    <View style={styles.container}>
+    <LinearGradient colors={['#0f8c8c', '#025959', '#012840']} style={styles.container}>
       <Text style={styles.title}>Detalles del Dispensador</Text>
-      <Text style={styles.detail}>Dispensador: {"Dispensador"+container.id_dispensador || "No disponible"}</Text>
-      <Text style={styles.detail}>
-        Estado: {container.estado === "1" ? "Activo" : container.estado === "0" ? "Inactivo" : "No disponible"}
-      </Text>
-      <Text style={styles.detail}>Ubicación: {container.ubicacion}</Text>
-      <Button title="Regresar" onPress={() => navigation.goBack()} />
-    </View>
+      <View style={styles.detailsContainer}>
+        <Text style={styles.label}>Dispensador:</Text>
+        <Text style={styles.value}>{container.id_dispensador || "No disponible"}</Text>
+        <Text style={styles.label}>Estado:</Text>
+        <Text style={styles.value}>
+          {container.estado === "1" ? "Activo" : container.estado === "0" ? "Inactivo" : "No disponible"}
+        </Text>
+        <Text style={styles.label}>Ubicación:</Text>
+        <Text style={styles.value}>{container.ubicacion}</Text>
+      </View>
+      <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
+        <Text style={styles.buttonText}>Regresar</Text>
+      </TouchableOpacity>
+    </LinearGradient>
   );
 };
 
-// Estilos para una mejor presentación
+// Estilos mejorados con la animación y el diseño anterior
 const styles = StyleSheet.create({
   container: {
-    padding: 20,
-    backgroundColor: "#fff",
     flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
   },
   title: {
-    fontSize: 24,
-    fontWeight: "bold",
-    marginBottom: 20,
-    color: "#333",
+    fontSize: 30,
+    fontWeight: '900',
+    color: '#fff',
+    marginBottom: 25,
+    textAlign: 'center',
+    textShadowColor: 'rgba(0, 0, 0, 0.4)',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 2,
   },
-  detail: {
-    fontSize: 16,
-    marginBottom: 10,
-    color: "#555",
+  detailsContainer: {
+    backgroundColor: '#fff',
+    borderRadius: 16,
+    padding: 25,
+    width: '100%',
+    marginBottom: 30,
+    elevation: 5,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+    borderLeftWidth: 5,
+    borderLeftColor: '#00a8cc',
+  },
+  label: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#025959',
+    marginBottom: 6,
+  },
+  value: {
+    fontSize: 17,
+    color: '#333',
+    marginBottom: 18,
+    paddingLeft: 8,
+  },
+  backButton: {
+    backgroundColor: '#00a8cc',
+    paddingVertical: 15,
+    paddingHorizontal: 30,
+    borderRadius: 10,
+    alignItems: 'center',
+    width: '100%',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5,
+  },
+  buttonText: {
+    color: '#fff',
+    fontWeight: 'bold',
+    fontSize: 17,
+    letterSpacing: 1,
   },
   error: {
-    fontSize: 16,
-    color: "red",
+    color: '#ff4d4d',
+    fontSize: 17,
+    textAlign: 'center',
     marginBottom: 20,
-    textAlign: "center",
   },
   loading: {
     fontSize: 18,
-    color: "#777",
+    color: '#fff',
+    marginTop: 10,
   },
 });
 

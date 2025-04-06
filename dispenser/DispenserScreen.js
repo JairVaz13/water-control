@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { View, Text, Alert, StyleSheet, TouchableOpacity } from "react-native";
+import { View, Text, Alert, StyleSheet, TouchableOpacity, ActivityIndicator } from "react-native";
 import { createStackNavigator } from "@react-navigation/stack";
 import CrearDispensador from "./crearDispensador";
 import EditarDispensador from "./editarDispensador";
@@ -24,24 +24,19 @@ const getToken = async () => {
   }
 };
 
-const DispensadorItem = ({ id, estado, ubicacion, navigation,handleDelete }) => {
+const DispensadorItem = ({ id, estado, ubicacion, navigation, handleDelete }) => {
   return (
     <View style={styles.itemContainer}>
       <Text style={styles.itemTitle}>Dispensador: {id || "No disponible"}</Text>
       <Text style={styles.itemText}>
-  Estado: {estado === 1 ? "Activo" : estado === 0 ? "Inactivo" : "No disponible"}
-</Text>
+        Estado: {estado === 1 ? "Activo" : estado === 0 ? "Inactivo" : "No disponible"}
+      </Text>
       <Text style={styles.itemText}>Ubicación: {ubicacion || "No disponible"}</Text>
       <View style={styles.buttonContainer}>
         <TouchableOpacity style={styles.buttonGreen} onPress={() => navigation.navigate("Ver", { id })}>
           <Text style={styles.buttonText}>Ver</Text>
         </TouchableOpacity>
-       {/* 
-       <TouchableOpacity style={styles.buttonBlue} onPress={() => navigation.navigate("Editar", { id })}>
-          <Text style={styles.buttonText}>Actualizar</Text>
-        </TouchableOpacity>
-        */}
-       <TouchableOpacity style={styles.buttonRed} onPress={() => handleDelete(id)}>
+        <TouchableOpacity style={styles.buttonRed} onPress={() => handleDelete(id)}>
           <Text style={styles.buttonText}>Eliminar</Text>
         </TouchableOpacity>
       </View>
@@ -66,11 +61,8 @@ const DispensadoresScreen = ({ navigation }) => {
           return;
         }
 
-        
         const response = await fetch(`https://water-efficient-control.onrender.com/dispensadores?token=${token}`);
-
         
-
         if (!response.ok) {
           throw new Error("Error al obtener los dispensadores. No tienes dispensadores.");
         }
@@ -124,13 +116,14 @@ const DispensadoresScreen = ({ navigation }) => {
 
     fetchDispensadorsWithDetails();
   }, []);
+
   const handleDelete = async (id) => {
     const token = await getToken();
     if (!token) {
       Alert.alert("Error", "No se encontró un token válido.");
       return;
     }
-  
+
     Alert.alert(
       "Confirmar eliminación",
       "¿Estás seguro de que deseas eliminar este dispensador?",
@@ -144,11 +137,11 @@ const DispensadoresScreen = ({ navigation }) => {
                 `https://water-efficient-control.onrender.com/dispensadores/${id}?token=${token}`,
                 { method: "DELETE" }
               );
-  
+
               if (!response.ok) {
                 throw new Error("Error eliminando el dispensador.");
               }
-  
+
               console.log("Dispensador eliminado");
               setData((prevData) => prevData.filter((item) => item.id_dispensador !== id));
             } catch (error) {
@@ -160,20 +153,26 @@ const DispensadoresScreen = ({ navigation }) => {
       ]
     );
   };
+
   return (
     <LinearGradient colors={["#0f8c8c", "#025959", "#012840"]} style={styles.gradient}>
       <View style={styles.screenContainer}>
         <Text style={styles.header}>Dispensadores</Text>
+        
+        {/* Muestra el mensaje de carga o el indicador de carga */}
         {error ? (
           <Text style={styles.errorText}>{error}</Text>
         ) : loading ? (
-          <Text style={styles.loadingText}>Cargando...</Text>
+          <View style={styles.loadingContainer}>
+            <ActivityIndicator size="large" color="#fff" />
+            <Text style={styles.loadingText}>Cargando dispensadores...</Text>
+          </View>
         ) : data.length > 0 ? (
           data.map((item) => (
             <DispensadorItem
               key={item.id_dispensador}
               id={item.id_dispensador}
-              estado={parseInt(item.estado, 10)} 
+              estado={parseInt(item.estado, 10)}
               ubicacion={item.ubicacion}
               navigation={navigation}
               handleDelete={handleDelete}
@@ -182,6 +181,7 @@ const DispensadoresScreen = ({ navigation }) => {
         ) : (
           <Text style={styles.noDataText}>No hay dispensadores registrados.</Text>
         )}
+        
         <TouchableOpacity style={styles.createButton} onPress={() => navigation.navigate("Crear")}>
           <Text style={styles.createButtonText}>+ Crear</Text>
         </TouchableOpacity>
@@ -196,10 +196,10 @@ const Stack = createStackNavigator();
 const Dispensadores = () => {
   return (
     <Stack.Navigator initialRouteName="Dispensadores">
-      <Stack.Screen name="Dispensadores" component={DispensadoresScreen}/>
-      <Stack.Screen name="Crear" component={CrearDispensador} />
-      <Stack.Screen name="Editar" component={EditarDispensador} />
-      <Stack.Screen name="Ver" component={VerDispensador} />
+      <Stack.Screen name="Dispensadores" component={DispensadoresScreen} options={{ headerShown: false }} />
+      <Stack.Screen name="Crear" component={CrearDispensador} options={{ headerShown: false }} />
+      <Stack.Screen name="Editar" component={EditarDispensador} options={{ headerShown: false }} />
+      <Stack.Screen name="Ver" component={VerDispensador} options={{ headerShown: false }} />
     </Stack.Navigator>
   );
 };
@@ -211,25 +211,26 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   header: {
-    fontSize: 24,
+    fontSize: 26,
     fontWeight: 'bold',
     marginBottom: 20,
     color: '#fff',
     textAlign: 'center',
+    textTransform: 'uppercase',
   },
   itemContainer: {
     padding: 20,
     marginBottom: 15,
     backgroundColor: 'rgba(255, 255, 255, 0.1)',
-    borderRadius: 10,
+    borderRadius: 15,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
+    shadowOffset: { width: 0, height: 3 },
     shadowOpacity: 0.1,
-    shadowRadius: 5,
-    elevation: 3,
+    shadowRadius: 10,
+    elevation: 5,
   },
   itemTitle: {
-    fontSize: 16,
+    fontSize: 18,
     fontWeight: 'bold',
     color: '#fff',
   },
@@ -240,22 +241,22 @@ const styles = StyleSheet.create({
   },
   buttonContainer: {
     flexDirection: 'row',
-    marginTop: 10,
+    marginTop: 15,
     justifyContent: 'space-between',
   },
   buttonGreen: {
     backgroundColor: '#4caf50',
-    padding: 10,
-    borderRadius: 8,
+    padding: 12,
+    borderRadius: 10,
     flex: 1,
-    marginRight: 5,
+    marginRight: 8,
   },
-  buttonBlue: {
-    backgroundColor: '#2196f3',
-    padding: 10,
-    borderRadius: 8,
+  buttonRed: {
+    backgroundColor: '#d32f2f',
+    padding: 12,
+    borderRadius: 10,
     flex: 1,
-    marginLeft: 5,
+    marginLeft: 8,
   },
   buttonText: {
     color: '#fff',
@@ -264,20 +265,26 @@ const styles = StyleSheet.create({
   },
   createButton: {
     backgroundColor: '#00a8cc',
-    padding: 15,
-    borderRadius: 8,
+    padding: 16,
+    borderRadius: 10,
     marginTop: 20,
+    elevation: 3,
   },
   createButtonText: {
     color: '#fff',
     textAlign: 'center',
-    fontSize: 16,
+    fontSize: 18,
     fontWeight: 'bold',
+  },
+  loadingContainer: {
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginTop: 30,
   },
   loadingText: {
     fontSize: 18,
-    color: '#ccc',
-    textAlign: 'center',
+    color: '#fff',
+    marginTop: 10,
   },
   noDataText: {
     fontSize: 16,
@@ -286,15 +293,8 @@ const styles = StyleSheet.create({
   },
   errorText: {
     fontSize: 16,
-    color: 'red',
+    color: '#f44336',
     textAlign: 'center',
-  },
-  buttonRed: {
-    backgroundColor: '#d32f2f', // Color rojo para eliminar
-    padding: 10,
-    borderRadius: 8,
-    flex: 1,
-    marginLeft: 5,
   },
 });
 

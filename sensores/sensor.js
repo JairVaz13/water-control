@@ -11,10 +11,8 @@ const getToken = async () => {
   try {
     const token = await AsyncStorage.getItem('userToken');
     if (token !== null) {
-      console.log('Token recuperado:', token);
-      return token; // Aquí devuelves el token
+      return token;
     } else {
-      console.log('No se encontró ningún token');
       return null;
     }
   } catch (error) {
@@ -39,7 +37,6 @@ const SensorItem = ({ id, ubicacion, tipo, navigation, onDelete }) => {
         <TouchableOpacity style={styles.buttonRed} onPress={() => onDelete(id)}>
           <Text style={styles.buttonText}>Eliminar</Text>
         </TouchableOpacity>
-        
       </View>
     </View>
   );
@@ -55,19 +52,17 @@ const SensoresScreen = ({ navigation }) => {
       setLoading(true);
       setError(null);
       try {
-        const token = await getToken(); // Recupera el token
+        const token = await getToken();
         if (!token) {
           setError("No se encontró un token válido.");
           setLoading(false);
           return;
         }
   
-        const response = await fetch(
-          `https://water-efficient-control.onrender.com/sensors/${token}`
-        );
+        const response = await fetch(`https://water-efficient-control.onrender.com/sensors/${token}`);
   
         if (!response.ok) {
-          throw new Error("Error al obtener los sensores,no tienes sensores");
+          throw new Error("Error al obtener los sensores");
         }
   
         const sensors = await response.json();
@@ -81,7 +76,7 @@ const SensoresScreen = ({ navigation }) => {
                 );
   
                 if (!containerResponse.ok) {
-                  throw new Error("Error al obtener el contenedor,no tienes contenedores");
+                  throw new Error("Error al obtener el contenedor");
                 }
   
                 const containerData = await containerResponse.json();
@@ -91,7 +86,6 @@ const SensoresScreen = ({ navigation }) => {
                   ubicacion: `${containerData.tipo || "No disponible"}-${sensor.id_recipiente} ${containerData.ubicacion || "No disponible"}`,
                 };
               } catch (error) {
-                console.error(`Error fetching container for ${sensor.id_recipiente}:`, error);
                 return {
                   ...sensor,
                   ubicacion: `${sensor.id_recipiente} - No disponible (${sensor.tipo})`,
@@ -108,7 +102,6 @@ const SensoresScreen = ({ navigation }) => {
   
         setData(sensorsWithDetails);
       } catch (err) {
-        console.error("Error fetching sensors or containers:", err);
         setError("Error cargando datos. Intenta nuevamente más tarde.");
       } finally {
         setLoading(false);
@@ -117,7 +110,7 @@ const SensoresScreen = ({ navigation }) => {
   
     fetchSensorsWithDetails();
   }, []);
-  
+
   const handleDelete = async (id) => {
     const token = await getToken();
     if (!token) {
@@ -143,10 +136,8 @@ const SensoresScreen = ({ navigation }) => {
                 throw new Error("Error eliminando el sensor.");
               }
   
-              console.log("Sensor eliminado");
               setData((prevData) => prevData.filter((item) => item.id_sensor !== id));
             } catch (error) {
-              console.error("Error eliminando el sensor:", error);
               Alert.alert("Error", "Hubo un problema al eliminar el sensor.");
             }
           },
@@ -154,6 +145,7 @@ const SensoresScreen = ({ navigation }) => {
       ]
     );
   };
+
   return (
     <LinearGradient colors={["#0f8c8c", "#025959", "#012840"]} style={styles.gradient}>
       <View style={styles.screenContainer}>
@@ -183,16 +175,16 @@ const SensoresScreen = ({ navigation }) => {
     </LinearGradient>
   );
 };
-// Configuración de la navegación
+
 const Stack = createStackNavigator();
 
 const Sensores = () => {
   return (
     <Stack.Navigator initialRouteName="Sensores">
-      <Stack.Screen name="Sensores" component={SensoresScreen}/>
-      <Stack.Screen name="Crear" component={CrearSensor} />
-      <Stack.Screen name="Editar" component={EditarSensor} />
-      <Stack.Screen name="Ver" component={VerSensor} />
+      <Stack.Screen name="Sensores" component={SensoresScreen} options={{ headerShown: false }} />
+      <Stack.Screen name="Crear" component={CrearSensor} options={{ headerShown: false }}  />
+      <Stack.Screen name="Editar" component={EditarSensor} options={{ headerShown: false }} />
+      <Stack.Screen name="Ver" component={VerSensor} options={{ headerShown: false }} />
     </Stack.Navigator>
   );
 };
@@ -204,7 +196,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   header: {
-    fontSize: 24,
+    fontSize: 36,
     fontWeight: 'bold',
     marginBottom: 20,
     color: '#fff',
@@ -214,41 +206,41 @@ const styles = StyleSheet.create({
     padding: 20,
     marginBottom: 15,
     backgroundColor: 'rgba(255, 255, 255, 0.1)',
-    borderRadius: 10,
+    borderRadius: 15,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 5,
-    elevation: 3,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.2,
+    shadowRadius: 10,
+    elevation: 5,
   },
   itemTitle: {
-    fontSize: 16,
+    fontSize: 18,
     fontWeight: 'bold',
     color: '#fff',
   },
   itemText: {
-    fontSize: 14,
+    fontSize: 16,
     color: '#ccc',
     marginTop: 5,
   },
   buttonContainer: {
     flexDirection: 'row',
-    marginTop: 10,
+    marginTop: 15,
     justifyContent: 'space-between',
   },
   buttonGreen: {
     backgroundColor: '#4caf50',
-    padding: 10,
-    borderRadius: 8,
+    padding: 12,
+    borderRadius: 10,
     flex: 1,
-    marginRight: 5,
+    marginRight: 10,
   },
   buttonBlue: {
     backgroundColor: '#2196f3',
-    padding: 10,
-    borderRadius: 8,
+    padding: 12,
+    borderRadius: 10,
     flex: 1,
-    marginLeft: 5,
+    marginLeft: 10,
   },
   buttonText: {
     color: '#fff',
@@ -258,13 +250,13 @@ const styles = StyleSheet.create({
   createButton: {
     backgroundColor: '#00a8cc',
     padding: 15,
-    borderRadius: 8,
-    marginTop: 20,
+    borderRadius: 10,
+    marginTop: 30,
   },
   createButtonText: {
     color: '#fff',
     textAlign: 'center',
-    fontSize: 16,
+    fontSize: 18,
     fontWeight: 'bold',
   },
   loadingText: {
@@ -273,17 +265,23 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   noDataText: {
-    fontSize: 16,
+    fontSize: 18,
     color: '#ccc',
     textAlign: 'center',
   },
+  errorText: {
+    color: '#ff6b6b',
+    fontSize: 16,
+    textAlign: 'center',
+    marginTop: 20,
+  },
   buttonRed: {
-    backgroundColor: '#d32f2f', // Color rojo para eliminar
-    padding: 10,
-    borderRadius: 8,
+    backgroundColor: '#d32f2f',
+    padding: 12,
+    borderRadius: 10,
     flex: 1,
-    marginLeft: 5,
+    marginLeft: 10,
   },
 });
 
-export default Sensores  ;
+export default Sensores;

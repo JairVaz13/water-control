@@ -3,6 +3,7 @@ import { View, Text, TextInput, TouchableOpacity, StyleSheet, ActivityIndicator,
 import { LinearGradient } from 'expo-linear-gradient';
 import { Picker } from '@react-native-picker/picker';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import Animated from 'react-native-reanimated';
 
 const getToken = async () => {
   try {
@@ -120,8 +121,10 @@ const EditarContenedor = ({ route, navigation }) => {
     return (
       <LinearGradient colors={['#0f8c8c', '#025959', '#012840']} style={styles.gradient}>
         <View style={styles.container}>
-          <ActivityIndicator size="large" color="#fff" />
-          <Text style={styles.loadingText}>Cargando...</Text>
+          <Animated.View style={styles.loadingContainer}>
+            <ActivityIndicator size="large" color="#fff" />
+            <Text style={styles.loadingText}>Cargando...</Text>
+          </Animated.View>
         </View>
       </LinearGradient>
     );
@@ -138,6 +141,7 @@ const EditarContenedor = ({ route, navigation }) => {
             <Picker
               selectedValue={tipo}
               onValueChange={(itemValue) => setTipo(itemValue)}
+              style={styles.picker}
             >
               <Picker.Item label="Selecciona un tipo" value="" />
               <Picker.Item label="Alberca" value="Alberca" />
@@ -170,17 +174,19 @@ const EditarContenedor = ({ route, navigation }) => {
 
         {error && <Text style={styles.error}>{error}</Text>}
 
-        <TouchableOpacity
-          style={[styles.saveButton, submitting && styles.saveButtonDisabled]}
-          onPress={handleSubmit}
-          disabled={submitting}
-        >
-          {submitting ? (
-            <ActivityIndicator color="#fff" />
-          ) : (
-            <Text style={styles.saveButtonText}>Guardar Cambios</Text>
-          )}
-        </TouchableOpacity>
+        <Animated.View style={submitting ? styles.disabledButton : styles.saveButtonContainer}>
+          <TouchableOpacity
+            style={[styles.saveButton, submitting && styles.saveButtonDisabled]}
+            onPress={handleSubmit}
+            disabled={submitting}
+          >
+            {submitting ? (
+              <ActivityIndicator color="#fff" />
+            ) : (
+              <Text style={styles.saveButtonText}>Guardar Cambios</Text>
+            )}
+          </TouchableOpacity>
+        </Animated.View>
 
         <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
           <Text style={styles.backButtonText}>Regresar</Text>
@@ -191,7 +197,9 @@ const EditarContenedor = ({ route, navigation }) => {
 };
 
 const styles = StyleSheet.create({
-  gradient: { flex: 1 },
+  gradient: {
+    flex: 1,
+  },
   container: {
     flex: 1,
     justifyContent: 'center',
@@ -199,28 +207,33 @@ const styles = StyleSheet.create({
     padding: 20,
   },
   title: {
-    fontSize: 28,
+    fontSize: 30,
     fontWeight: 'bold',
     textAlign: 'center',
     color: '#fff',
     marginBottom: 30,
   },
   inputGroup: {
-    marginBottom: 15,
+    marginBottom: 20,
     width: '100%',
   },
   label: {
-    fontSize: 14,
+    fontSize: 16,
     color: '#ccc',
     marginBottom: 5,
   },
   pickerContainer: {
-    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    backgroundColor: 'rgba(255, 255, 255, 0.3)',
     borderRadius: 8,
     padding: 15,
+    marginBottom: 15,
+  },
+  picker: {
+    color: '#fff',
+    fontSize: 16,
   },
   input: {
-    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    backgroundColor: 'rgba(255, 255, 255, 0.3)',
     borderRadius: 8,
     padding: 15,
     marginBottom: 15,
@@ -232,19 +245,22 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginBottom: 10,
   },
+  saveButtonContainer: {
+    marginTop: 20,
+  },
   saveButton: {
     backgroundColor: '#00a8cc',
     padding: 15,
     borderRadius: 8,
-    marginTop: 10,
+    alignItems: 'center',
+    width: '100%',
   },
   saveButtonDisabled: {
     backgroundColor: '#00a8cc80',
   },
   saveButtonText: {
     color: '#fff',
-    textAlign: 'center',
-    fontSize: 16,
+    fontSize: 18,
     fontWeight: 'bold',
   },
   backButton: {
@@ -252,8 +268,19 @@ const styles = StyleSheet.create({
   },
   backButtonText: {
     color: '#00e5ff',
-    textAlign: 'center',
-    fontSize: 14,
+    fontSize: 16,
+  },
+  loadingContainer: {
+    justifyContent: 'center',
+    alignItems: 'center',
+    opacity: 0,
+    transform: [{ translateY: 50 }],
+    animation: 'fadeInUp',
+  },
+  loadingText: {
+    color: '#fff',
+    fontSize: 18,
+    marginTop: 10,
   },
 });
 

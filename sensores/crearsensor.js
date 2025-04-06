@@ -1,7 +1,12 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, Button, StyleSheet, Alert } from 'react-native';
+import { View, Text, Button, StyleSheet, Alert, Dimensions } from 'react-native';
 import { Picker } from '@react-native-picker/picker';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { LinearGradient } from 'expo-linear-gradient'; // Asegúrate de tener instalado expo-linear-gradient
+import * as Animatable from 'react-native-animatable'; // Importa react-native-animatable
+
+// Obtener dimensiones de la pantalla
+const { width, height } = Dimensions.get('window');
 
 const getToken = async () => {
   try {
@@ -108,10 +113,24 @@ const CrearSensor = ({ navigation }) => {
   };
 
   return (
-    <View style={styles.mainContainer}>
-      <Text style={styles.title}>Crear Sensor</Text>
+    <LinearGradient
+      colors={['#0f8c8c', '#025959', '#012840']}
+      style={styles.mainContainer}
+    >
+      <Animatable.Text
+        style={styles.title}
+        animation="fadeInDown"
+        duration={1500}
+      >
+        Crear Sensor
+      </Animatable.Text>
 
-      <View style={styles.container}>
+      <Animatable.View
+        animation="fadeInUp"
+        duration={1500}
+        delay={500}
+        style={styles.container}
+      >
         <Text style={styles.label}>Tipo:</Text>
         <View style={styles.pickerContainer}>
           <Picker
@@ -123,9 +142,14 @@ const CrearSensor = ({ navigation }) => {
             <Picker.Item label="Sensor de TDS" value="Sensor de TDS" />
           </Picker>
         </View>
-      </View>
+      </Animatable.View>
 
-      <View style={styles.container}>
+      <Animatable.View
+        animation="fadeInUp"
+        duration={1500}
+        delay={800}
+        style={styles.container}
+      >
         <Text style={styles.label}>Contenedor:</Text>
         <View style={styles.pickerContainer}>
           <Picker
@@ -142,51 +166,61 @@ const CrearSensor = ({ navigation }) => {
             ))}
           </Picker>
         </View>
-      </View>
+      </Animatable.View>
 
       {error && <Text style={styles.error}>{error}</Text>}
 
-      <Button
-        title={loading ? 'Guardando...' : 'Guardar Cambios'}
-        onPress={handleSubmit}
-        disabled={loading}
-        color="#007BFF"
-      />
-    </View>
+      <Animatable.View
+        animation="bounceIn"
+        duration={1500}
+        style={styles.buttonContainer}
+      >
+        <Button
+          title={loading ? 'Guardando...' : 'Guardar Cambios'}
+          onPress={handleSubmit}
+          disabled={loading}
+          color="#00a8cc"
+        />
+      </Animatable.View>
+    </LinearGradient>
   );
 };
 
 const styles = StyleSheet.create({
   mainContainer: {
     flex: 1,
-    backgroundColor: '#F7F9FC',
-    padding: 20,
+    padding: width * 0.05,  // 5% del ancho de la pantalla
   },
   title: {
-    fontSize: 24,
+    fontSize: width * 0.08,  // 8% del ancho de la pantalla
     fontWeight: 'bold',
-    color: '#333',
-    marginBottom: 20,
+    color: '#fff',
+    marginBottom: height * 0.05, // 5% del alto de la pantalla
     textAlign: 'center',
   },
   pickerContainer: {
-    borderWidth: 1,
-    borderColor: '#D1D5DB',
+    backgroundColor: 'rgba(255, 255, 255, 0.3)',
     borderRadius: 8,
-    backgroundColor: '#FFFFFF',
+    paddingVertical: height * 0.02,  // 2% del alto de la pantalla
+    paddingHorizontal: width * 0.04, // 4% del ancho de la pantalla
+    marginBottom: height * 0.02, // 2% del alto de la pantalla
+    width: '100%',
   },
   label: {
-    marginBottom: 8,
-    fontSize: 16,
-    color: '#4A5568',
+    marginBottom: height * 0.01,  // 1% del alto de la pantalla
+    fontSize: width * 0.05,  // 5% del ancho de la pantalla
+    color: '#fff',
   },
   container: {
-    marginBottom: 16,
+    marginBottom: height * 0.03,  // 3% del alto de la pantalla
   },
   error: {
     color: '#E53E3E',
-    fontSize: 14,
-    marginBottom: 8,
+    fontSize: width * 0.04,  // 4% del ancho de la pantalla
+    marginBottom: height * 0.02,  // 2% del alto de la pantalla
+  },
+  buttonContainer: {
+    marginTop: height * 0.05, // Añadido para separar el botón del resto de los componentes
   },
 });
 

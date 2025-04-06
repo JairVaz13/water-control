@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, Alert, StyleSheet, TouchableOpacity, ActivityIndicator, Image } from 'react-native';
+import { View, Text, Alert, StyleSheet, TouchableOpacity, ActivityIndicator, Image, ScrollView } from 'react-native';
 import { Picker } from '@react-native-picker/picker';
 import { LinearGradient } from 'expo-linear-gradient';
 import * as ImagePicker from 'expo-image-picker';
@@ -88,7 +88,6 @@ const RecomendacionesScreenFoto = ({ navigation }) => {
 
       const response = await fetch(`${BASE_URL}ia/foto?id_recipiente=${contenedorSeleccionado}`, {
         method: 'POST',
-        
         body: formData,
       });
 
@@ -102,12 +101,7 @@ const RecomendacionesScreenFoto = ({ navigation }) => {
       Alert.alert(
         'Éxito',
         'Recomendación obtenida con éxito.',
-        [
-          {
-            text: 'OK',
-            onPress: () => navigation.navigate('MostrarRecomendacionFoto', { recomendacion: data }),
-          },
-        ]
+        [{ text: 'OK', onPress: () => navigation.navigate('MostrarRecomendacionFoto', { recomendacion: data }) }]
       );
     } catch (error) {
       console.error('Error al obtener la recomendación:', error);
@@ -119,53 +113,55 @@ const RecomendacionesScreenFoto = ({ navigation }) => {
 
   return (
     <LinearGradient colors={['#0f8c8c', '#025959', '#012840']} style={styles.container}>
-      <Text style={styles.title}>Crear Recomendación con Foto</Text>
+      <ScrollView contentContainerStyle={styles.scrollContent}>
+        <Text style={styles.title}>Recomendación con Foto</Text>
 
-      <View style={styles.transparentContainer}>
-        <Text style={styles.label}>Contenedor:</Text>
-        <View style={styles.pickerContainer}>
-          <Picker
-            selectedValue={contenedorSeleccionado}
-            onValueChange={(itemValue) => setContenedorSeleccionado(itemValue)}
+        <View style={styles.transparentContainer}>
+          <Text style={styles.label}>Selecciona un Contenedor:</Text>
+          <View style={styles.pickerContainer}>
+            <Picker
+              selectedValue={contenedorSeleccionado}
+              onValueChange={(itemValue) => setContenedorSeleccionado(itemValue)}
+            >
+              <Picker.Item label="Selecciona un contenedor" value="" />
+              {contenedores.map((contenedor) => (
+                <Picker.Item
+                  key={contenedor.id_recipiente}
+                  label={`${contenedor.tipo || 'Tipo desconocido'} - ${contenedor.id_recipiente}`}
+                  value={contenedor.id_recipiente}
+                />
+              ))}
+            </Picker>
+          </View>
+
+          <TouchableOpacity style={[styles.button, styles.selectButton]} onPress={pickImage}>
+            <Text style={styles.buttonText}>Seleccionar Imagen</Text>
+          </TouchableOpacity>
+
+          {image && <Image source={{ uri: image }} style={styles.imagePreview} />}
+
+          {error ? <Text style={styles.errorText}>{error}</Text> : null}
+          {loading && <ActivityIndicator size="large" color="#fff" style={{ marginTop: 10 }} />}
+
+          <TouchableOpacity
+            style={[styles.button, styles.submitButton]}
+            onPress={handleSubmit}
+            disabled={loading}
           >
-            <Picker.Item label="Selecciona un contenedor" value="" />
-            {contenedores.map((contenedor) => (
-              <Picker.Item
-                key={contenedor.id_recipiente}
-                label={`${contenedor.tipo || 'Tipo desconocido'} - ${contenedor.id_recipiente || 'ID desconocido'}`}
-                value={contenedor.id_recipiente}
-              />
-            ))}
-          </Picker>
+            <Text style={styles.buttonText}>{loading ? 'Cargando...' : 'Obtener Recomendación'}</Text>
+          </TouchableOpacity>
         </View>
-
-        <TouchableOpacity style={styles.actionButton} onPress={pickImage}>
-          <Text style={styles.buttonText}>Seleccionar Imagen</Text>
-        </TouchableOpacity>
-
-        {image && <Image source={{ uri: image }} style={styles.imagePreview} />}
-
-        {error && <Text style={styles.errorText}>{error}</Text>}
-        {loading && <ActivityIndicator size="large" color="#fff" />}
-
-        <TouchableOpacity
-          style={[styles.actionButton, styles.submitButton]}
-          onPress={handleSubmit}
-          disabled={loading}
-        >
-          <Text style={styles.buttonText}>{loading ? 'Cargando...' : 'Obtener Recomendación'}</Text>
-        </TouchableOpacity>
-      </View>
+      </ScrollView>
     </LinearGradient>
   );
 };
 
-
-
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    justifyContent: 'center',
+  },
+  scrollContent: {
+    padding: 20,
     alignItems: 'center',
   },
   title: {
@@ -173,9 +169,10 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: '#fff',
     marginBottom: 20,
+    textAlign: 'center',
   },
   transparentContainer: {
-    width: '90%',
+    width: '100%',
     backgroundColor: 'rgba(255, 255, 255, 0.2)',
     padding: 20,
     borderRadius: 15,
@@ -189,31 +186,46 @@ const styles = StyleSheet.create({
     marginBottom: 8,
     fontSize: 16,
     color: '#fff',
+    fontWeight: 'bold',
   },
   pickerContainer: {
     borderWidth: 1,
     borderColor: '#ccc',
     borderRadius: 8,
     backgroundColor: '#fff',
+    marginBottom: 20,
   },
-  errorText: {
-    color: 'red',
-    fontSize: 14,
-    marginBottom: 8,
-  },
-  actionButton: {
-    padding: 12,
+  button: {
+    paddingVertical: 12,
+    paddingHorizontal: 20,
     borderRadius: 8,
     alignItems: 'center',
-    marginTop: 20,
+    marginTop: 15,
+  },
+  selectButton: {
+    backgroundColor: '#025959',
+  },
+  submitButton: {
+    backgroundColor: '#00a8cc',
   },
   buttonText: {
     color: '#fff',
     fontWeight: 'bold',
     fontSize: 16,
   },
-  submitButton: {
-    backgroundColor: '#00a8cc',
+  errorText: {
+    color: 'red',
+    fontSize: 14,
+    marginTop: 10,
+    textAlign: 'center',
+  },
+  imagePreview: {
+    width: '100%',
+    height: 200,
+    marginTop: 15,
+    borderRadius: 10,
+    borderColor: '#fff',
+    borderWidth: 1,
   },
 });
 

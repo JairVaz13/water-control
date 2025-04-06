@@ -1,14 +1,16 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, Button, StyleSheet, Alert } from 'react-native';
+import { View, Text, StyleSheet, Alert, TouchableOpacity } from 'react-native';
 import { Picker } from '@react-native-picker/picker';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { LinearGradient } from 'expo-linear-gradient';
+import * as Animatable from 'react-native-animatable';
 
 const getToken = async () => {
   try {
     const token = await AsyncStorage.getItem('userToken');
     if (token !== null) {
       console.log('Token recuperado:', token);
-      return token; // Devuelve el token
+      return token;
     } else {
       console.log('No se encontró ningún token');
       return null;
@@ -19,8 +21,7 @@ const getToken = async () => {
   }
 };
 
-const CrearDispensador = ({ route,navigation }) => {
-  const [tipo, setTipo] = useState('');
+const CrearDispensador = ({ navigation }) => {
   const [contenedores, setContenedores] = useState([]);
   const [contenedorSeleccionado, setContenedorSeleccionado] = useState('');
   const [loading, setLoading] = useState(false);
@@ -30,18 +31,13 @@ const CrearDispensador = ({ route,navigation }) => {
     const fetchContenedores = async () => {
       try {
         const token = await getToken();
-        if (!token) {
-          throw new Error('No se encontró un token válido.');
-        }
+        if (!token) throw new Error('No se encontró un token válido.');
 
-        const response = await fetch(
-          `https://water-efficient-control.onrender.com/containers/${token}`
-        );
-        if (!response.ok) {
-          throw new Error('Error al obtener la lista de contenedores.');
-        }
+        const response = await fetch(`https://water-efficient-control.onrender.com/containers/${token}`);
+        if (!response.ok) throw new Error('Error al obtener la lista de contenedores.');
+
         const data = await response.json();
-        setContenedores(data || []); // Asume que la API devuelve un array de contenedores
+        setContenedores(data || []);
       } catch (error) {
         console.error('Error al obtener los contenedores:', error);
         setError('No se pudieron cargar los contenedores.');
@@ -53,7 +49,7 @@ const CrearDispensador = ({ route,navigation }) => {
 
   const handleSubmit = async () => {
     if (!contenedorSeleccionado) {
-      setError('Por favor completa todos los campos requeridos.');
+      setError('Por favor selecciona un contenedor.');
       return;
     }
 
@@ -62,42 +58,31 @@ const CrearDispensador = ({ route,navigation }) => {
 
     try {
       const token = await getToken();
-      if (!token) {
-        throw new Error('No se encontró un token válido.');
-      }
+      if (!token) throw new Error('No se encontró un token válido.');
 
       const newDispensador = {
         estado: '0',
         id_recipiente: parseInt(contenedorSeleccionado, 10),
-        token,        // Cambiar al nombre esperado por el backend
+        token,
       };
 
-      const response = await fetch(
-        'https://water-efficient-control.onrender.com/dispensadores/crear/',
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify(newDispensador),
-        }
-      );
+      const response = await fetch('https://water-efficient-control.onrender.com/dispensadores/crear/', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(newDispensador),
+      });
 
       if (!response.ok) {
         const errorMessage = await response.text();
-        console.error('Error del servidor:', errorMessage);
-        throw new Error('Error en la solicitud al servidor.');
+        throw new Error(errorMessage || 'Error al crear el dispensador.');
       }
 
       const data = await response.json();
-      console.log('Nuevo Dispensador agregado:', data);
-      setTipo('');
+      console.log('Dispensador creado:', data);
+
       setContenedorSeleccionado('');
       Alert.alert('Éxito', 'Dispensador creado con éxito', [
-        {
-          text: 'OK',
-          onPress: () => navigation.navigate('Dispensadores'), // Navegar a la pantalla de Dispensadores
-        },
+        { text: 'OK', onPress: () => navigation.navigate('Dispensadores') },
       ]);
     } catch (error) {
       console.error('Error al agregar el Dispensador:', error);
@@ -108,72 +93,102 @@ const CrearDispensador = ({ route,navigation }) => {
   };
 
   return (
-    <View style={styles.mainContainer}>
-      <Text style={styles.title}>Agregar Dispensador a tu alberca</Text>
+    <LinearGradient colors={['#0f8c8c', '#025959', '#012840']} style={styles.container}>
+      <Animatable.Text animation="fadeIn" style={styles.title}>
+        Agregar Dispensador a tu alberca
+      </Animatable.Text>
 
-      
-      <View style={styles.container}>
-        <Text style={styles.label}>Contenedor:</Text>
-        <View style={styles.pickerContainer}>
-          <Picker
-            selectedValue={contenedorSeleccionado}
-            onValueChange={(itemValue) => setContenedorSeleccionado(itemValue)}
-          >
-            <Picker.Item label="Selecciona un contenedor" value="" />
-            {contenedores.map((contenedor) => (
-              <Picker.Item
-                key={contenedor.id_recipiente}
-                label={`${contenedor.tipo || 'Tipo desconocido'} - ${contenedor.id_recipiente || 'ID desconocido'}`}
-                value={contenedor.id_recipiente}
-              />
-            ))}
-          </Picker>
-        </View>
+      <View style={styles.transparentContainer}>
+        <Animatable.View animation="fadeInUp" style={styles.formContainer}>
+          <Text style={styles.label}>Contenedor:</Text>
+          <View style={styles.pickerContainer}>
+            <Picker
+              selectedValue={contenedorSeleccionado}
+              onValueChange={(itemValue) => setContenedorSeleccionado(itemValue)}
+            >
+              <Picker.Item label="Selecciona un contenedor" value="" />
+              {contenedores.map((contenedor) => (
+                <Picker.Item
+                  key={contenedor.id_recipiente}
+                  label={`${contenedor.tipo || 'Tipo desconocido'} - ${contenedor.id_recipiente}`}
+                  value={contenedor.id_recipiente}
+                />
+              ))}
+            </Picker>
+          </View>
+        </Animatable.View>
+
+        {error ? <Text style={styles.errorText}>{error}</Text> : null}
+
+        <TouchableOpacity
+          style={[styles.actionButton, styles.submitButton]}
+          onPress={handleSubmit}
+          disabled={loading}
+        >
+          <Text style={styles.buttonText}>{loading ? 'Guardando...' : 'Guardar Cambios'}</Text>
+        </TouchableOpacity>
       </View>
-
-      {error && <Text style={styles.error}>{error}</Text>}
-
-      <Button
-        title={loading ? 'Guardando...' : 'Guardar Cambios'}
-        onPress={handleSubmit}
-        disabled={loading}
-        color="#007BFF"
-      />
-    </View>
+    </LinearGradient>
   );
 };
 
 const styles = StyleSheet.create({
-  mainContainer: {
+  container: {
     flex: 1,
-    backgroundColor: '#F7F9FC',
-    padding: 20,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   title: {
-    fontSize: 24,
+    fontSize: 28,
     fontWeight: 'bold',
-    color: '#333',
+    color: '#fff',
     marginBottom: 20,
     textAlign: 'center',
   },
-  pickerContainer: {
-    borderWidth: 1,
-    borderColor: '#D1D5DB',
-    borderRadius: 8,
-    backgroundColor: '#FFFFFF',
+  transparentContainer: {
+    width: '90%',
+    backgroundColor: 'rgba(255, 255, 255, 0.15)',
+    padding: 25,
+    borderRadius: 18,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.2,
+    shadowRadius: 6,
+    elevation: 6,
+  },
+  formContainer: {
+    marginBottom: 20,
   },
   label: {
-    marginBottom: 8,
-    fontSize: 16,
-    color: '#4A5568',
+    fontSize: 18,
+    color: '#fff',
+    marginBottom: 10,
   },
-  container: {
-    marginBottom: 16,
+  pickerContainer: {
+    borderWidth: 1,
+    borderColor: '#a3a3a3',
+    borderRadius: 10,
+    backgroundColor: '#fff',
   },
-  error: {
-    color: '#E53E3E',
+  errorText: {
+    color: 'red',
     fontSize: 14,
-    marginBottom: 8,
+    marginTop: 10,
+    textAlign: 'center',
+  },
+  actionButton: {
+    paddingVertical: 14,
+    borderRadius: 10,
+    alignItems: 'center',
+    marginTop: 25,
+  },
+  buttonText: {
+    color: '#fff',
+    fontWeight: 'bold',
+    fontSize: 18,
+  },
+  submitButton: {
+    backgroundColor: '#00a8cc',
   },
 });
 

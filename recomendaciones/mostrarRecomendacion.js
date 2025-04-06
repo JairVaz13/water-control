@@ -3,9 +3,8 @@ import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-nati
 import { LinearGradient } from 'expo-linear-gradient';
 
 const MostrarRecomendacion = ({ route, navigation }) => {
-  const { recomendacion } = route.params || {}; // Manejo de valores undefined
+  const { recomendacion } = route.params || {};
 
-  // Validar si no hay recomendación
   if (!recomendacion) {
     return (
       <LinearGradient colors={['#0f8c8c', '#025959', '#012840']} style={styles.container}>
@@ -23,17 +22,23 @@ const MostrarRecomendacion = ({ route, navigation }) => {
     <LinearGradient colors={['#0f8c8c', '#025959', '#012840']} style={styles.container}>
       <ScrollView contentContainerStyle={styles.scrollContainer}>
         <Text style={styles.title}>Recomendación Obtenida</Text>
+
         <View style={styles.transparentContainer}>
-          <Text style={styles.label}>Tipo de Recipiente:</Text>
-          <Text style={styles.content}>{recomendacion.tipo_recipiente}</Text>
+          <View style={styles.section}>
+            <Text style={styles.label}>Tipo de Recipiente</Text>
+            <Text style={styles.content}>{recomendacion.tipo_recipiente}</Text>
+          </View>
 
-          <Text style={styles.label}>Capacidad del Recipiente:</Text>
-          <Text style={styles.content}>{recomendacion.capacidad_recipiente} litros</Text>
+          <View style={styles.section}>
+            <Text style={styles.label}>Capacidad del Recipiente</Text>
+            <Text style={styles.content}>{recomendacion.capacidad_recipiente} litros</Text>
+          </View>
 
-          <Text style={styles.label}>Recomendación:</Text>
-          <Text style={styles.content}>{recomendacion.response}</Text>
+          <View style={styles.section}>
+            <Text style={styles.label}>Recomendación</Text>
+            <Text style={styles.content}>{recomendacion.response}</Text>
+          </View>
 
-          
           <TouchableOpacity style={styles.button} onPress={() => navigation.goBack()}>
             <Text style={styles.buttonText}>Regresar</Text>
           </TouchableOpacity>
@@ -52,61 +57,61 @@ const styles = StyleSheet.create({
     padding: 20,
   },
   title: {
-    fontSize: 28,
+    fontSize: 30,
     fontWeight: 'bold',
-    color: '#fff',
-    marginBottom: 20,
+    color: '#ffffff',
+    marginBottom: 30,
     textAlign: 'center',
   },
   emptyContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
+    paddingHorizontal: 20,
   },
   transparentContainer: {
-    width: '90%',
-    backgroundColor: 'rgba(255, 255, 255, 0.2)',
-    padding: 20,
-    borderRadius: 15,
+    width: '95%',
+    backgroundColor: 'rgba(255, 255, 255, 0.15)',
+    padding: 25,
+    borderRadius: 20,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
+    shadowOffset: { width: 0, height: 6 },
     shadowOpacity: 0.3,
     shadowRadius: 8,
-    elevation: 5,
+    elevation: 6,
+  },
+  section: {
+    marginBottom: 20,
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(255,255,255,0.3)',
+    paddingBottom: 10,
   },
   label: {
-    marginBottom: 8,
-    fontSize: 16,
-    color: '#fff',
-    fontWeight: 'bold',
-  },
-  content: {
-    fontSize: 14,
-    color: '#fff',
-    marginBottom: 16,
-  },
-  sensorContainer: {
-    marginTop: 10,
-    padding: 10,
-    backgroundColor: 'rgba(0, 0, 0, 0.3)',
-    borderRadius: 10,
-  },
-  sensorLabel: {
-    color: '#fff',
+    fontSize: 17,
+    color: '#ffffff',
     fontWeight: 'bold',
     marginBottom: 5,
   },
+  content: {
+    fontSize: 15,
+    color: '#e0f7fa',
+    lineHeight: 22,
+  },
   button: {
-    marginTop: 20,
-    backgroundColor: '#025959',
-    paddingVertical: 10,
-    paddingHorizontal: 20,
-    borderRadius: 10,
+    marginTop: 30,
+    backgroundColor: '#00a8cc',
+    paddingVertical: 12,
+    borderRadius: 12,
     alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.3,
+    shadowRadius: 5,
+    elevation: 5,
   },
   buttonText: {
     color: '#fff',
-    fontSize: 16,
+    fontSize: 17,
     fontWeight: 'bold',
   },
 });

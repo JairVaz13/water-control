@@ -1,18 +1,19 @@
 import React, { useEffect, useState } from "react";
-import { View, Text, Button, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator } from 'react-native';
 import { createStackNavigator } from '@react-navigation/stack';
 import { LinearGradient } from 'expo-linear-gradient';
 import CrearContenedor from './crearContnedor';
 import EditarContenedor from './editarContenedor';
 import VerContenedor from './verContenedor';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { Ionicons } from '@expo/vector-icons';
 
 const getToken = async () => {
   try {
     const token = await AsyncStorage.getItem('userToken');
     if (token !== null) {
       console.log('Token recuperado:', token);
-      return token; // Aquí devuelves el token
+      return token;
     } else {
       console.log('No se encontró ningún token');
       return null;
@@ -23,14 +24,13 @@ const getToken = async () => {
   }
 };
 
-
 const AlbercaItem = ({ id, ubicacion, tipo, capacidad, navigation }) => {
   return (
     <View style={styles.itemContainer}>
-      <Text style={styles.itemTitle}>Nombre: {tipo + id || "No disponible"}</Text>
-      <Text style={styles.itemText}>Ubicación: {ubicacion || "No disponible"}</Text>
-      <Text style={styles.itemText}>Tipo: {tipo || "No especificado"}</Text>
-      <Text style={styles.itemText}>Capacidad: {capacidad || "No especificada"}</Text>
+      <Text style={styles.itemTitle}>{tipo} {id}</Text>
+      <Text style={styles.itemText}>📍 Ubicación: {ubicacion || "No disponible"}</Text>
+      <Text style={styles.itemText}>⚙️ Tipo: {tipo || "No especificado"}</Text>
+      <Text style={styles.itemText}>🧪 Capacidad: {capacidad || "No especificada"}</Text>
       <View style={styles.buttonContainer}>
         <TouchableOpacity
           style={[styles.actionButton, { backgroundColor: '#28a745' }]}
@@ -42,7 +42,7 @@ const AlbercaItem = ({ id, ubicacion, tipo, capacidad, navigation }) => {
           style={[styles.actionButton, { backgroundColor: '#007bff' }]}
           onPress={() => navigation.navigate("Editar", { id })}
         >
-          <Text style={styles.buttonText}>Actualizar</Text>
+          <Text style={styles.buttonText}>Editar</Text>
         </TouchableOpacity>
       </View>
     </View>
@@ -57,22 +57,14 @@ const ContenedoresScreen = ({ navigation }) => {
     const fetchContainers = async () => {
       setLoading(true);
       try {
-        // Obtener el token desde AsyncStorage
         const token = await getToken();
-
         if (!token) {
-          console.error("Token no disponible. Por favor, inicia sesión.");
+          console.error("Token no disponible.");
           setLoading(false);
           return;
         }
-
-        // Realizar la solicitud con el token en la URL
         const response = await fetch(`https://water-efficient-control.onrender.com/containers/${token}`);
-
-        if (!response.ok) {
-          throw new Error("Error al obtener los contenedores.");
-        }
-
+        if (!response.ok) throw new Error("Error al obtener los contenedores.");
         const result = await response.json();
         setData(result);
       } catch (error) {
@@ -87,9 +79,10 @@ const ContenedoresScreen = ({ navigation }) => {
 
   return (
     <LinearGradient colors={['#0f8c8c', '#025959', '#012840']} style={styles.container}>
-      <Text style={styles.title}>Contenedores</Text>
+      <Text style={styles.title}>📦 Contenedores</Text>
+
       {loading ? (
-        <Text style={styles.loadingText}>Cargando...</Text>
+        <ActivityIndicator size="large" color="#00ced1" />
       ) : data.length > 0 ? (
         <ScrollView contentContainerStyle={styles.scrollContainer}>
           {data.map((item) => (
@@ -106,16 +99,17 @@ const ContenedoresScreen = ({ navigation }) => {
       ) : (
         <Text style={styles.noDataText}>No hay contenedores registrados.</Text>
       )}
+
       <TouchableOpacity
         style={[styles.actionButton, styles.createButton]}
         onPress={() => navigation.navigate("Crear")}
       >
-        <Text style={styles.buttonText}>+ Crear</Text>
+        <Ionicons name="add-circle-outline" size={20} color="#fff" />
+        <Text style={[styles.buttonText, { marginLeft: 8 }]}>Crear nuevo</Text>
       </TouchableOpacity>
     </LinearGradient>
   );
 };
-
 
 const Stack = createStackNavigator();
 
@@ -136,68 +130,74 @@ const styles = StyleSheet.create({
     padding: 20,
   },
   scrollContainer: {
-    paddingBottom: 20,
+    paddingBottom: 30,
   },
   title: {
-    fontSize: 28,
-    fontWeight: 'bold',
+    fontSize: 40,
+    fontWeight: '900',
     textAlign: 'center',
-    color: '#fff', // Texto blanco para el título
+    color: '#ffffff',
     marginBottom: 20,
+    letterSpacing: 1,
   },
   loadingText: {
     textAlign: 'center',
     fontSize: 16,
-    color: '#ccc', // Texto más claro para indicar que está cargando
+    color: '#ccc',
   },
   noDataText: {
     textAlign: 'center',
     fontSize: 16,
-    color: '#999', // Texto de color gris claro si no hay datos
+    color: '#ddd',
   },
   itemContainer: {
-    padding: 15,
+    padding: 20,
     marginVertical: 10,
-    backgroundColor: 'rgba(255, 255, 255, 0.1)', // Fondo translúcido para los ítems
-    borderRadius: 10,
+    backgroundColor: 'rgba(255, 255, 255, 0.07)',
+    borderRadius: 15,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.1)',
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.3,
     shadowRadius: 4,
-    elevation: 2,
+    elevation: 4,
   },
   itemTitle: {
-    fontSize: 18,
+    fontSize: 20,
     fontWeight: 'bold',
-    marginBottom: 5,
-    color: '#fff', // Texto en blanco para el nombre
+    color: '#ffffff',
+    marginBottom: 6,
   },
   itemText: {
-    fontSize: 14,
-    color: '#ccc', // Texto en gris claro para los detalles
-    marginBottom: 5,
+    fontSize: 15,
+    color: '#dcdcdc',
+    marginBottom: 4,
   },
   buttonContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginTop: 10,
+    marginTop: 15,
   },
   actionButton: {
-    padding: 10,
-    borderRadius: 8,
+    flexDirection: 'row',
+    justifyContent: 'center',
     alignItems: 'center',
+    paddingVertical: 10,
+    borderRadius: 10,
     width: '48%',
+    backgroundColor: '#007bff',
+  },
+  createButton: {
+    marginTop: 25,
+    alignSelf: 'center',
+    backgroundColor: '#00a8cc',
+    width: '60%',
   },
   buttonText: {
     color: '#fff',
-    fontWeight: 'bold',
-    fontSize: 14,
-  },
-  createButton: {
-    backgroundColor: '#00a8cc', // Fondo morado para el botón de crear
-    marginTop: 20,
-    alignSelf: 'center',
-    width: '50%',
+    fontWeight: '600',
+    fontSize: 15,
   },
 });
 
